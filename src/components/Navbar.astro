@@ -1,0 +1,42 @@
+---
+import { TrendingUp } from 'lucide-react';
+---
+
+<header class="sticky top-0 z-40 w-full border-b border-fxr-border/80 bg-fxr-bg/85 backdrop-blur-md">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+    <!-- Brand Logo -->
+    <a href="/" class="flex items-center gap-2 text-fxr-text font-extrabold tracking-wider text-lg hover:opacity-90 transition-opacity">
+      <div class="w-8 h-8 rounded-lg bg-fxr-primary flex items-center justify-center text-white shadow-md shadow-blue-600/30">
+        <TrendingUp className="w-5 h-5" />
+      </div>
+      <span class="font-mono font-bold tracking-tighter text-xl">FX<span class="text-fxr-primary">REPLAY</span></span>
+    </a>
+
+    <!-- Navigation Links -->
+    <nav class="hidden md:flex items-center gap-6 text-sm font-medium text-fxr-muted">
+      <a href="#features" class="hover:text-fxr-text transition-colors">Features</a>
+      <a href="#simulator" class="hover:text-fxr-text transition-colors">Simulator</a>
+      <a href="#comparison" class="hover:text-fxr-text transition-colors">Why FX Replay</a>
+      <a href="#pricing" class="hover:text-fxr-text transition-colors">Pricing</a>
+    </nav>
+
+    <!-- Nav CTAs -->
+    <div class="flex items-center gap-3">
+      <a
+        href="/api/users"
+        target="_blank"
+        class="hidden sm:inline-flex px-3 py-1.5 rounded-lg border border-fxr-border text-xs font-mono text-fxr-muted hover:text-fxr-text hover:bg-fxr-card transition-colors"
+        title="Inspect raw Users API endpoint"
+      >
+        API Endpoint
+      </a>
+
+      <button
+        onclick="document.querySelector('#simulator')?.scrollIntoView({ behavior: 'smooth' })"
+        class="px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold text-white bg-fxr-primary hover:bg-fxr-primaryHover active:scale-95 transition-all shadow-md shadow-blue-600/25"
+      >
+        Try Free
+      </button>
+    </div>
+  </div>
+</header>

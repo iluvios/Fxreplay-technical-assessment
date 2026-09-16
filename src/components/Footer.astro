@@ -1,0 +1,37 @@
+---
+import { TrendingUp, ShieldCheck, Heart } from 'lucide-react';
+---
+
+<footer class="border-t border-fxr-border bg-[#05070A] py-12 text-xs text-fxr-subtle">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-fxr-border/60">
+      <div class="flex items-center gap-2">
+        <div class="w-6 h-6 rounded-md bg-fxr-primary flex items-center justify-center text-white">
+          <TrendingUp className="w-3.5 h-3.5" />
+        </div>
+        <span class="font-mono font-bold tracking-tight text-sm text-fxr-text">FX<span class="text-fxr-primary">REPLAY</span></span>
+      </div>
+
+      <div class="flex flex-wrap items-center justify-center gap-6 text-fxr-muted">
+        <a href="#features" class="hover:text-fxr-text transition-colors">Features</a>
+        <a href="#simulator" class="hover:text-fxr-text transition-colors">Simulator</a>
+        <a href="#pricing" class="hover:text-fxr-text transition-colors">Pricing</a>
+        <a href="/api/users" class="hover:text-fxr-text font-mono transition-colors">Users API (GET / POST)</a>
+        <a href="https://github.com/asjohan" target="_blank" class="hover:text-fxr-text transition-colors">GitHub Repository</a>
+      </div>
+
+      <div class="text-xs text-fxr-subtle">
+        Growth Engineering Technical Assessment
+      </div>
+    </div>
+
+    <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px]">
+      <div>
+        &copy; {new Date().getFullYear()} FX Replay Inc. All rights reserved. Not financial advice.
+      </div>
+      <div class="flex items-center gap-1 text-fxr-muted">
+        Built with Astro 5, React, TypeScript, and Claude Code
+      </div>
+    </div>
+  </div>
+</footer>

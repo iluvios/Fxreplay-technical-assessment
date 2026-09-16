@@ -1,0 +1,27 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Navbar from '../components/Navbar.astro';
+import { InteractiveHero } from '../components/InteractiveHero';
+import Features from '../components/Features.astro';
+import ComparisonTable from '../components/ComparisonTable.astro';
+import PricingSection from '../components/PricingSection.astro';
+import Footer from '../components/Footer.astro';
+
+// Technical Decision: Statically prerender the marketing landing page for maximum Core Web Vitals (sub-second LCP).
+// The API endpoints (/api/users) remain dynamic serverless routes on Vercel.
+export const prerender = true;
+---
+
+<Layout>
+  <Navbar />
+  <main>
+    <!-- Interactive Hero Island (A/B testing, React Signup Modal, Candlestick Replay) -->
+    <InteractiveHero client:load />
+
+    <!-- Pure Static HTML Sections (0 KB JavaScript Payload for maximum Lighthouse score) -->
+    <Features />
+    <ComparisonTable />
+    <PricingSection />
+  </main>
+  <Footer />
+</Layout>

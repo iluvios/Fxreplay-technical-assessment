@@ -1,0 +1,91 @@
+---
+import { BarChart3, BookOpen, ShieldAlert, Sparkles, Clock, Layers, Zap, CheckCircle2 } from 'lucide-react';
+
+const features = [
+  {
+    icon: BarChart3,
+    title: "Tick-Level Historical Data",
+    desc: "Replay real bid/ask spreads, slippage, and exact order executions across Forex, Crypto, Indices, and Futures going back to 2003.",
+    badge: "Accuracy",
+    color: "text-blue-400 bg-blue-500/10 border-blue-500/20"
+  },
+  {
+    icon: ShieldAlert,
+    title: "Prop Firm Challenge Simulator",
+    desc: "Simulate FTMO, FundedNext, and custom challenge rules with max daily loss caps, profit targets, and drawdown tracking in real-time.",
+    badge: "Risk-Free",
+    color: "text-emerald-400 bg-emerald-500/10 border-emerald-500/20"
+  },
+  {
+    icon: BookOpen,
+    title: "Automated Trade Journaling",
+    desc: "Never log trades manually again. Every entry, exit, MAE/MFE, and risk-to-reward ratio is automatically recorded into your visual journal.",
+    badge: "Automation",
+    color: "text-purple-400 bg-purple-500/10 border-purple-500/20"
+  },
+  {
+    icon: Sparkles,
+    title: "AI Trade Playbook Mentor",
+    desc: "Identify your trading leaks. Our AI analyzes your session history to surface repeat psychological mistakes, overtrading, and optimal session windows.",
+    badge: "AI Powered",
+    color: "text-amber-400 bg-amber-500/10 border-amber-500/20"
+  }
+];
+---
+
+<section id="features" class="py-16 md:py-24 border-t border-fxr-border/60 bg-gradient-to-b from-fxr-bg to-[#0B0E17]">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="text-center max-w-3xl mx-auto mb-14">
+      <h2 class="text-xs font-semibold text-fxr-primary uppercase tracking-widest mb-2 font-mono">
+        Engineered For Serious Traders
+      </h2>
+      <p class="text-3xl sm:text-4xl font-extrabold text-fxr-text tracking-tight">
+        Everything You Need to Master Your Edge
+      </p>
+      <p class="text-fxr-muted text-base mt-3">
+        Most tools are either basic visual bar-replays or complex coding testers. FX Replay is purpose-built for discretionary manual execution.
+      </p>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {features.map((f) => (
+        <div class="p-6 sm:p-8 rounded-2xl bg-fxr-card border border-fxr-border hover:border-fxr-borderLight transition-all group hover:-translate-y-0.5 shadow-lg">
+          <div class="flex items-center justify-between mb-4">
+            <div class={`w-12 h-12 rounded-xl border flex items-center justify-center ${f.color}`}>
+              <f.icon className="w-6 h-6" />
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-mono font-medium border bg-fxr-bg border-fxr-border text-fxr-muted">
+              {f.badge}
+            </span>
+          </div>
+          <h3 class="text-xl font-bold text-fxr-text group-hover:text-blue-400 transition-colors">
+            {f.title}
+          </h3>
+          <p class="text-sm text-fxr-muted mt-2.5 leading-relaxed">
+            {f.desc}
+          </p>
+        </div>
+      ))}
+    </div>
+
+    <!-- Quick Stats Bar -->
+    <div class="mt-12 p-6 rounded-2xl bg-fxr-card/60 border border-fxr-border grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <div>
+        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-fxr-text">1,000,000+</div>
+        <div class="text-xs text-fxr-muted mt-1">Traders Practicing</div>
+      </div>
+      <div>
+        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-fxr-accent">50,000,000+</div>
+        <div class="text-xs text-fxr-muted mt-1">Trades Simulated</div>
+      </div>
+      <div>
+        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-blue-400">20+ Years</div>
+        <div class="text-xs text-fxr-muted mt-1">Tick History (2003–Now)</div>
+      </div>
+      <div>
+        <div class="text-2xl sm:text-3xl font-extrabold font-mono text-amber-400">99.98%</div>
+        <div class="text-xs text-fxr-muted mt-1">Platform Uptime</div>
+      </div>
+    </div>
+  </div>
+</section>
