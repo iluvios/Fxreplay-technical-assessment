@@ -34,6 +34,21 @@ npm run dev
 
 Visit **`http://localhost:4321`** in your browser.
 
+### Experiment routes
+
+The landing experience resolves its copy variant from the `?lp=` query parameter on the server:
+
+| URL | ICP variant |
+|---|---|
+| `/freetrial` or `/` | Control (baseline `fxreplay.com` messaging) |
+| `/freetrial?lp=1` | Prop Firm Challenge Hunter (loss aversion) |
+| `/freetrial?lp=2` | 9-to-5 Weekend Warrior (time compression) |
+| `/freetrial?lp=3` | Systematizer / TradingView Skeptic (data precision) |
+
+Unknown or missing `lp` values fall back to control. Copy lives in
+[`src/lib/copy-dictionary.ts`](src/lib/copy-dictionary.ts); design tokens live in
+[`tailwind.config.mjs`](tailwind.config.mjs), transcribed from the official brand kit.
+
 ---
 
 ## 🔌 Users API Documentation
@@ -77,7 +92,7 @@ curl -X POST "http://localhost:4321/api/users" \
 
 ### 3. Update User
 ```bash
-curl -X PUT "http://localhost:4321/api/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" \
+curl -X PATCH "http://localhost:4321/api/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" \
   -H "Content-Type: application/json" \
   -d '{
     "planTier": "pro",
@@ -96,4 +111,6 @@ curl -X PUT "http://localhost:4321/api/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6
 
 ## 🚀 Deployment
 
-The application is configured for 1-click deployment on **Vercel** (`@astrojs/vercel` adapter). The marketing landing page is statically prerendered at build time for sub-second global delivery, while the `/api/users` routes run on Vercel Serverless Functions.
+The application is configured for 1-click deployment on **Vercel** (`@astrojs/vercel` adapter).
+
+The landing page is **server-rendered, not prerendered** — this is deliberate. The `?lp=` variant is resolved on the server so the ICP copy is already in the HTML on first paint, giving zero layout shift (no client-side text swap). The `/api/users` routes run as Vercel Serverless Functions.

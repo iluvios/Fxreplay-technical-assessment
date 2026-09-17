@@ -1,0 +1,173 @@
+---
+// Multi-asset coverage grid — docs/FRONTEND_BUILD_SPEC.md §3.6
+// Icons & broker logos: docs/IMAGE_ASSETS_CATALOG.md §5–6
+interface Props {
+  /** Signup destination, already carrying experiment or personalisation context. */
+  ctaHref: string;
+}
+
+const { ctaHref } = Astro.props;
+
+const BROKERS = {
+  oanda: {
+    name: 'OANDA',
+    logo: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6a55b3862fc4234b2845917b_oanda.svg',
+  },
+  dukascopy: {
+    name: 'Dukascopy',
+    logo: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6a55b393cc5ba6a7950dd087_Group%201171274871.svg',
+  },
+  pepperstone: {
+    name: 'Pepperstone',
+    logo: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6a55b37f080bbb616afde74d_pepperstone.svg',
+  },
+};
+
+const filters = ['Forex', 'Futures', 'Stocks', 'Crypto', 'Indexes', 'Other'];
+
+const assets = [
+  {
+    symbol: 'EURUSD',
+    tag: 'Forex',
+    icon: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/69efa3370aa7b096e78c38ac_68af652b14382868eea90f4a_EURUSD.png',
+    brokers: [BROKERS.oanda, BROKERS.dukascopy, BROKERS.pepperstone],
+    plan: 'Beginner+',
+    timeframes: '5s, 1m, 1h, 1D, +6',
+    initialDate: 'January 2, 2005',
+  },
+  {
+    symbol: 'USDCHF',
+    tag: 'Forex',
+    icon: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/69efa39834cee5aa5b1539d5_68af60fd6daf1c22323decf4_USDCHF.png',
+    brokers: [BROKERS.oanda, BROKERS.dukascopy],
+    plan: 'Beginner+',
+    timeframes: '5s, 1m, 1h, 1D, +6',
+    initialDate: 'January 2, 2005',
+  },
+  {
+    symbol: 'DXY',
+    tag: 'Indexes',
+    icon: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/69efa3248f954e7b3dc47127_68b5aa9b9af0a9a659d65770_dxy.png',
+    brokers: [BROKERS.oanda, BROKERS.pepperstone],
+    plan: 'Beginner+',
+    timeframes: '1m, 1h, 1D, +4',
+    initialDate: 'March 14, 2007',
+  },
+  {
+    symbol: 'SPX500',
+    tag: 'Indexes',
+    icon: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/69efa328f1ed4148877049d0_68b5aa49c452118ce30044fa_sp500.png',
+    brokers: [BROKERS.oanda, BROKERS.pepperstone],
+    plan: 'Intermediate+',
+    timeframes: '5s, 1m, 1h, 1D, +6',
+    initialDate: 'January 2, 2008',
+  },
+  {
+    symbol: 'NAS100',
+    tag: 'Indexes',
+    icon: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/69efa369bdabdc9cc8349c7e_68b5aa340b26c2723e6386f2_nas100.png',
+    brokers: [BROKERS.oanda, BROKERS.pepperstone],
+    plan: 'Intermediate+',
+    timeframes: '5s, 1m, 1h, 1D, +6',
+    initialDate: 'January 2, 2008',
+  },
+  {
+    symbol: 'US30',
+    tag: 'Indexes',
+    icon: 'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/69efa395014e41a5742cf701_68b5aa20a71734eb5c3fd01d_us30.png',
+    brokers: [BROKERS.oanda, BROKERS.dukascopy],
+    plan: 'Intermediate+',
+    timeframes: '1m, 1h, 1D, +4',
+    initialDate: 'June 1, 2010',
+  },
+];
+---
+
+<section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+  <div class="mb-8 flex items-center justify-between">
+    <h2 class="text-3xl font-black text-ink md:text-4xl">Assets</h2>
+    <a
+      href={ctaHref}
+      data-analytics-cta="asset_coverage"
+      class="rounded-full border border-line px-4 py-2 text-sm font-semibold text-ink-muted transition-colors hover:border-line-strong hover:text-ink"
+    >
+      Explore more
+    </a>
+  </div>
+
+  <!-- Category filters -->
+  <div class="mb-8 flex flex-wrap gap-2">
+    {
+      filters.map((filter, i) => (
+        <span
+          class={`rounded-full px-4 py-1.5 text-sm font-semibold ${
+            i === 0 ? 'bg-brand text-white' : 'border border-line bg-surface-raised text-ink-muted'
+          }`}
+        >
+          {filter}
+        </span>
+      ))
+    }
+  </div>
+
+  <!-- Asset grid -->
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      assets.map((asset) => (
+        <article class="rounded-2xl border border-line bg-surface-raised p-5 transition-colors hover:border-line-strong">
+          <div class="mb-4 flex items-center gap-3">
+            <img
+              src={asset.icon}
+              alt=""
+              loading="lazy"
+              decoding="async"
+              width="36"
+              height="36"
+              class="h-9 w-9 rounded-full"
+              aria-hidden="true"
+            />
+            <div>
+              <h3 class="font-mono text-base font-medium text-ink">{asset.symbol}</h3>
+              <span class="text-xs text-ink-subtle">{asset.tag}</span>
+            </div>
+          </div>
+
+          <dl class="space-y-3 text-xs">
+            <div>
+              <dt class="mb-1.5 text-ink-subtle">Available brokers:</dt>
+              <dd class="flex flex-wrap items-center gap-2">
+                {asset.brokers.map((broker) => (
+                  <span class="inline-flex items-center rounded-md border border-line bg-surface-inset px-2 py-1">
+                    <img
+                      src={broker.logo}
+                      alt={broker.name}
+                      loading="lazy"
+                      decoding="async"
+                      height="14"
+                      class="h-3.5 w-auto"
+                    />
+                  </span>
+                ))}
+              </dd>
+            </div>
+
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-subtle">Plan access:</dt>
+              <dd class="font-semibold text-ink">{asset.plan}</dd>
+            </div>
+
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-subtle">Timeframes:</dt>
+              <dd class="font-mono text-ink">{asset.timeframes}</dd>
+            </div>
+
+            <div class="flex justify-between gap-2">
+              <dt class="text-ink-subtle">Initial date:</dt>
+              <dd class="font-mono text-ink">{asset.initialDate}</dd>
+            </div>
+          </dl>
+        </article>
+      ))
+    }
+  </div>
+</section>

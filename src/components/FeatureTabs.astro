@@ -1,0 +1,177 @@
+---
+// Feature tabs — docs/FRONTEND_BUILD_SPEC.md §3.4
+// Zero client JS: tab switching is a pure CSS radio-input pattern.
+import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+
+interface Props {
+  copy: ExperimentVariantCopy;
+  /** Signup destination, already carrying experiment or personalisation context. */
+  ctaHref: string;
+}
+
+const { copy, ctaHref } = Astro.props;
+
+// Baseline tab content. Every string is sourced from docs/EXPERIMENT_VARIANTS_COPY.md
+// (control "Key Features List" + the variant whose active tab is that surface).
+const TABS = [
+  {
+    id: 'ft-0',
+    label: 'FXR Journal',
+    title: 'Track every move',
+    description:
+      'Backtest using historical data and see how your setups perform with zero risk and no emotional bias.',
+    cta_text: 'Start now',
+    image:
+      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d922b717860926108d39_journal%20-%20desktop.svg',
+  },
+  {
+    id: 'ft-1',
+    label: 'Prop firm simulator',
+    title: 'Train under real evaluation rules',
+    description:
+      'Simulate prop firm challenges with real rules and conditions to prepare for funded accounts.',
+    cta_text: 'Start prop simulation',
+    image:
+      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d94bfd5c98e00ccfcddb_prop%20firm%20-%20desktop.svg',
+  },
+  {
+    id: 'ft-2',
+    label: 'Mentor AI',
+    title: 'Get feedback on every session',
+    description:
+      'Get AI-powered feedback on your trading behavior to identify patterns and improve performance.',
+    cta_text: 'Start now',
+    image:
+      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d92af9c7c1567ee36ef6_mentor%20ai%20-%20desktop.svg',
+  },
+  {
+    id: 'ft-3',
+    label: 'FXR Script',
+    title: 'Zero lookahead leaks. Sub-second tick accuracy.',
+    description:
+      'Switch from the Daily to the 1-minute chart without flashing future price action. Backtest with the mathematical integrity TradingView lacks.',
+    cta_text: 'Test tick precision',
+    image:
+      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d94270b51704a534fee8_fxr%20script%20-%20desktop.svg',
+  },
+];
+
+// Which tab each variant opens on (docs/EXPERIMENT_VARIANTS_COPY.md §3, "Feature Tabs Copy (X active)").
+const ACTIVE_TAB_BY_VARIANT: Record<string, number> = {
+  control: 0,
+  prop_firm_hunter: 1,
+  weekend_warrior: 0,
+  tv_skeptic: 3,
+};
+
+const activeIndex = ACTIVE_TAB_BY_VARIANT[copy.variant_id] ?? 0;
+
+// The variant's own copy overrides the baseline content of its active tab.
+const tabs = TABS.map((tab, i) =>
+  i === activeIndex
+    ? {
+        ...tab,
+        title: copy.feature_tab.title,
+        description: copy.feature_tab.description,
+        cta_text: copy.feature_tab.cta_text,
+      }
+    : tab
+);
+
+---
+
+<section id="features" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+  <div class="fxr-tabs">
+    <input type="radio" name="fxr-feature-tab" id="ft-0" checked={activeIndex === 0} />
+    <input type="radio" name="fxr-feature-tab" id="ft-1" checked={activeIndex === 1} />
+    <input type="radio" name="fxr-feature-tab" id="ft-2" checked={activeIndex === 2} />
+    <input type="radio" name="fxr-feature-tab" id="ft-3" checked={activeIndex === 3} />
+
+    <!-- Tab switcher -->
+    <div
+      class="fxr-tablist mx-auto mb-10 flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-full border border-line bg-surface-raised p-1.5"
+      role="tablist"
+    >
+      {
+        tabs.map((tab) => (
+          <label
+            for={tab.id}
+            class="cursor-pointer rounded-full px-4 py-2 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+          >
+            {tab.label}
+          </label>
+        ))
+      }
+    </div>
+
+    <!-- Panels -->
+    <div class="fxr-panels">
+      {
+        tabs.map((tab) => (
+          <div
+            class="fxr-panel items-center gap-10 rounded-2xl border border-line bg-surface-raised p-6 md:p-10 lg:grid-cols-2"
+            data-panel={tab.id}
+          >
+            <div>
+              <h2 class="mb-4 text-3xl font-black text-ink md:text-4xl">{tab.title}</h2>
+              <p class="mb-6 leading-relaxed text-ink-muted">{tab.description}</p>
+              <a
+                href={ctaHref}
+                data-analytics-cta="feature_tabs"
+                class="inline-block rounded-full bg-brand px-6 py-3 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
+              >
+                {tab.cta_text}
+              </a>
+            </div>
+            <div class="overflow-hidden rounded-xl border border-line bg-surface-inset">
+              <img
+                src={tab.image}
+                alt={`${tab.label} preview`}
+                loading="lazy"
+                decoding="async"
+                width="720"
+                height="460"
+                class="h-auto w-full"
+              />
+            </div>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .fxr-tabs > input[type='radio'] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .fxr-panel {
+    display: none;
+  }
+
+  /* Active panel */
+  #ft-0:checked ~ .fxr-panels .fxr-panel[data-panel='ft-0'],
+  #ft-1:checked ~ .fxr-panels .fxr-panel[data-panel='ft-1'],
+  #ft-2:checked ~ .fxr-panels .fxr-panel[data-panel='ft-2'],
+  #ft-3:checked ~ .fxr-panels .fxr-panel[data-panel='ft-3'] {
+    display: grid;
+  }
+
+  /* Active tab pill */
+  #ft-0:checked ~ .fxr-tablist label[for='ft-0'],
+  #ft-1:checked ~ .fxr-tablist label[for='ft-1'],
+  #ft-2:checked ~ .fxr-tablist label[for='ft-2'],
+  #ft-3:checked ~ .fxr-tablist label[for='ft-3'] {
+    background-color: theme('colors.surface.inset');
+    color: theme('colors.ink.DEFAULT');
+  }
+
+  /* Keyboard focus parity with mouse users */
+  .fxr-tabs > input[type='radio']:focus-visible ~ .fxr-tablist label {
+    outline: 2px solid theme('colors.brand.DEFAULT');
+    outline-offset: 2px;
+  }
+</style>

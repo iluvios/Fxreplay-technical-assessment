@@ -1,85 +1,69 @@
 import type { APIRoute } from 'astro';
+import { ZodError } from 'zod';
 import { userDb } from '../../../lib/db';
 import { UpdateUserSchema } from '../../../lib/schemas';
-import { ZodError } from 'zod';
 
 export const prerender = false;
 
-// GET /api/users/[id] - Fetch single user
-export const GET: APIRoute = async ({ params }) => {
-  const { id } = params;
-  if (!id) {
-    return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  const user = await userDb.findById(id);
-  if (!user) {
-    return new Response(JSON.stringify({ success: false, error: 'User not found' }), {
-      status: 404,
-      headers: { 'Content-Type': 'application/json' },
-    });
-  }
-
-  return new Response(JSON.stringify({ success: true, data: user }), {
-    status: 200,
+const json = (body: unknown, status: number) =>
+  new Response(JSON.stringify(body), {
+    status,
     headers: { 'Content-Type': 'application/json' },
   });
-};
 
-// PUT /api/users/[id] - Update user profile / tier
-export const PUT: APIRoute = async ({ params, request }) => {
-  const { id } = params;
-  if (!id) {
-    return new Response(JSON.stringify({ success: false, error: 'User ID is required' }), {
-      status: 400,
-      headers: { 'Content-Type': 'application/json' },
-    });
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** GET /api/users/:id */
+export const GET: APIRoute = async ({ params }) => {
+  const id = params.id;
+
+  if (!id || !UUID_PATTERN.test(id)) {
+    return json({ success: false, error: 'Invalid user id' }, 400);
   }
 
   try {
-    const body = await request.json();
-    const validatedData = UpdateUserSchema.parse(body);
+    const user = await userDb.findById(id);
+    if (!user) return json({ success: false, error: 'User not found' }, 404);
 
-    const updatedUser = await userDb.update(id, validatedData);
-    if (!updatedUser) {
-      return new Response(JSON.stringify({ success: false, error: 'User not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' },
-      });
-    }
+    return json({ success: true, data: user }, 200);
+  } catch (error) {
+    console.error('[api/users/:id] GET failed:', error);
+    return json({ success: false, error: 'Failed to retrieve user' }, 500);
+  }
+};
 
-    return new Response(JSON.stringify({
-      success: true,
-      message: 'User updated successfully',
-      data: updatedUser,
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' },
-    });
+/** PATCH /api/users/:id — partial update. */
+export const PATCH: APIRoute = async ({ params, request }) => {
+  const id = params.id;
+
+  if (!id || !UUID_PATTERN.test(id)) {
+    return json({ success: false, error: 'Invalid user id' }, 400);
+  }
+
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return json({ success: false, error: 'Request body must be valid JSON' }, 400);
+  }
+
+  try {
+    const input = UpdateUserSchema.parse(payload);
+    const user = await userDb.update(id, input);
+
+    if (!user) return json({ success: false, error: 'User not found' }, 404);
+
+    return json({ success: true, data: user }, 200);
   } catch (error) {
     if (error instanceof ZodError) {
-      return new Response(JSON.stringify({
-        success: false,
-        error: 'Validation failed',
-        issues: error.issues.map((issue) => ({
-          field: issue.path.join('.'),
-          message: issue.message,
-        })),
-      }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' },
-      });
+      return json(
+        { success: false, error: 'Validation failed', fieldErrors: error.flatten().fieldErrors },
+        400
+      );
     }
 
-    return new Response(JSON.stringify({
-      success: false,
-      error: 'Failed to update user',
-    }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' },
-    });
+    console.error('[api/users/:id] PATCH failed:', error);
+    return json({ success: false, error: 'Failed to update user' }, 500);
   }
 };

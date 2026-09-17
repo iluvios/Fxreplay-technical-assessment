@@ -1,0 +1,116 @@
+---
+// Dedicated signup page — deliberately not a modal, so the step is linkable,
+// back-button friendly, and has no focus trap to manage.
+//
+// The experiment arm is re-derived from the visitor cookie rather than read from the URL,
+// so the copy here always matches the arm the visitor saw on the landing page and cannot
+// be changed by editing the query string.
+import Layout from '../layouts/Layout.astro';
+import SignupForm from '../components/SignupForm';
+import { resolveExperience } from '../lib/experiments';
+import { getOrCreateVisitorId, rememberEnrolment } from '../lib/visitor';
+import { getOrCreateAttribution } from '../lib/attribution';
+
+export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const visitorId = getOrCreateVisitorId(Astro.cookies);
+
+// Captured here too: a visitor can land directly on /signup from an ad.
+getOrCreateAttribution(Astro.cookies, Astro.url, Astro.request.headers.get('referer'));
+
+const lp = Astro.url.searchParams.get('lp');
+const { copy, assignment } = resolveExperience({
+  lp,
+  previewVariant: Astro.url.searchParams.get('variant'),
+  visitorId,
+});
+
+rememberEnrolment(Astro.cookies, assignment);
+
+const LOGO_URL =
+  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a02920e2b4fe38ee5a3a06a_fxreplay-logo.svg';
+
+const trustPoints = [
+  'Free plan, no credit card required',
+  'Real historical data across forex, futures, stocks and crypto',
+  'Every replay trade journaled automatically',
+];
+---
+
+<Layout title={`${copy.modal.title} | FX Replay`} description={copy.modal.subtitle}>
+  <div
+    data-signup-root
+    data-variant-id={copy.variant_id}
+    data-experiment-id={assignment && !assignment.is_preview ? assignment.experiment_id : ''}
+    class="flex min-h-screen flex-col"
+  >
+    <header class="border-b border-line">
+      <div class="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 sm:px-6">
+        <a href="/" class="transition-opacity hover:opacity-80" aria-label="FX Replay home">
+          <img src={LOGO_URL} alt="FX Replay" width="120" height="26" class="h-6 w-auto" />
+        </a>
+        <a href="/" class="text-sm font-semibold text-ink-muted transition-colors hover:text-ink">
+          Back to site
+        </a>
+      </div>
+    </header>
+
+    <main class="mx-auto grid w-full max-w-5xl flex-1 gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_440px] lg:gap-16 lg:py-20">
+      <!-- Value reinforcement: keeps the promise visible while the form is filled in. -->
+      <section class="lg:pt-6">
+        <h1 class="mb-4 text-3xl font-black leading-tight text-ink md:text-4xl">
+          {copy.modal.title}
+        </h1>
+        <p class="mb-8 max-w-md text-base leading-relaxed text-ink-muted">
+          {copy.modal.subtitle}
+        </p>
+
+        <ul class="space-y-3">
+          {
+            trustPoints.map((point) => (
+              <li class="flex items-start gap-3 text-sm text-ink-muted">
+                <span
+                  class="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-success"
+                  aria-hidden="true"
+                />
+                {point}
+              </li>
+            ))
+          }
+        </ul>
+      </section>
+
+      <section>
+        <SignupForm
+          client:load
+          lp={lp}
+          submitLabel={copy.modal.cta_text}
+          variantId={copy.variant_id}
+          experimentId={assignment && !assignment.is_preview ? assignment.experiment_id : null}
+        />
+      </section>
+    </main>
+
+    <footer class="border-t border-line py-6">
+      <p class="mx-auto max-w-5xl px-4 text-xs leading-relaxed text-ink-subtle sm:px-6">
+        Trading leveraged products carries a high level of risk. Simulated performance does not
+        represent actual trading and is not indicative of future results.
+      </p>
+    </footer>
+  </div>
+</Layout>
+
+<script>
+  import { analytics } from '../lib/analytics';
+
+  const root = document.querySelector<HTMLElement>('[data-signup-root]');
+  const experiment_id = root?.dataset.experimentId || undefined;
+
+  analytics.init();
+  analytics.track('signup_page_viewed', {
+    variant_id: root?.dataset.variantId ?? 'control',
+    ...(experiment_id ? { experiment_id } : {}),
+  });
+</script>

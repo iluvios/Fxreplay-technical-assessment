@@ -1,36 +1,99 @@
 ---
-import { TrendingUp, ShieldCheck, Heart } from 'lucide-react';
+// Static footer — docs/FRONTEND_BUILD_SPEC.md §2 (links, legal disclosures, copyright)
+interface Props {
+  /** Signup destination, already carrying experiment or personalisation context. */
+  ctaHref: string;
+}
+
+const { ctaHref } = Astro.props;
+
+const LOGO_URL =
+  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a02920e2b4fe38ee5a3a06a_fxreplay-logo.svg';
+
+const columns = [
+  {
+    heading: 'Product',
+    links: [
+      { label: 'Features', href: '#features' },
+      { label: 'Assets', href: '#assets' },
+      { label: 'Pricing', href: '#pricing' },
+      { label: 'FXR Battles', href: '#battles' },
+    ],
+  },
+  {
+    heading: 'Resources',
+    links: [
+      { label: 'Documentation', href: '#resources' },
+      { label: 'Mentor AI', href: '#features' },
+      { label: 'FXR Script', href: '#features' },
+      { label: 'Community', href: '#community' },
+    ],
+  },
+  {
+    heading: 'Company',
+    links: [
+      { label: 'About', href: '#about' },
+      { label: 'Contact', href: '#contact' },
+      { label: 'Terms of Service', href: '#terms' },
+      { label: 'Privacy Policy', href: '#privacy' },
+    ],
+  },
+];
+
+const year = new Date().getFullYear();
 ---
 
-<footer class="border-t border-fxr-border bg-[#05070A] py-12 text-xs text-fxr-subtle">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex flex-col md:flex-row items-center justify-between gap-6 pb-8 border-b border-fxr-border/60">
-      <div class="flex items-center gap-2">
-        <div class="w-6 h-6 rounded-md bg-fxr-primary flex items-center justify-center text-white">
-          <TrendingUp className="w-3.5 h-3.5" />
-        </div>
-        <span class="font-mono font-bold tracking-tight text-sm text-fxr-text">FX<span class="text-fxr-primary">REPLAY</span></span>
+<footer class="border-t border-line bg-surface-raised">
+  <div class="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
+    <div class="grid gap-10 pb-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
+      <!-- Brand column -->
+      <div>
+        <img src={LOGO_URL} alt="FX Replay" width="132" height="28" class="mb-4 h-7 w-auto" />
+        <p class="mb-5 max-w-xs text-sm leading-relaxed text-ink-muted">
+          Backtest your strategy against real historical markets — before you risk real capital.
+        </p>
+        <a
+          href={ctaHref}
+          data-analytics-cta="footer"
+          class="inline-block rounded-full bg-brand px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
+        >
+          Get started for free
+        </a>
       </div>
 
-      <div class="flex flex-wrap items-center justify-center gap-6 text-fxr-muted">
-        <a href="#features" class="hover:text-fxr-text transition-colors">Features</a>
-        <a href="#simulator" class="hover:text-fxr-text transition-colors">Simulator</a>
-        <a href="#pricing" class="hover:text-fxr-text transition-colors">Pricing</a>
-        <a href="/api/users" class="hover:text-fxr-text font-mono transition-colors">Users API (GET / POST)</a>
-        <a href="https://github.com/asjohan" target="_blank" class="hover:text-fxr-text transition-colors">GitHub Repository</a>
-      </div>
-
-      <div class="text-xs text-fxr-subtle">
-        Growth Engineering Technical Assessment
-      </div>
+      <!-- Link columns -->
+      {
+        columns.map((column) => (
+          <div>
+            <h3 class="mb-4 text-sm font-bold text-ink">{column.heading}</h3>
+            <ul class="space-y-2.5">
+              {column.links.map((link) => (
+                <li>
+                  <a href={link.href} class="text-sm text-ink-muted transition-colors hover:text-ink">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
     </div>
 
-    <div class="pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-[11px]">
-      <div>
-        &copy; {new Date().getFullYear()} FX Replay Inc. All rights reserved. Not financial advice.
-      </div>
-      <div class="flex items-center gap-1 text-fxr-muted">
-        Built with Astro 5, React, TypeScript, and Claude Code
+    <!-- Legal -->
+    <div class="border-t border-line pt-8">
+      <p class="mb-4 text-xs leading-relaxed text-ink-subtle">
+        <strong class="text-ink-muted">Risk disclosure:</strong> Trading foreign exchange, futures, and
+        other leveraged products carries a high level of risk and may not be suitable for all investors.
+        Past performance — including simulated or backtested performance — is not indicative of future
+        results. Simulated results do not represent actual trading and may under- or over-compensate for
+        the impact of market factors such as liquidity and slippage. Nothing on this page constitutes
+        financial advice.
+      </p>
+
+      <div class="flex flex-col items-center justify-between gap-3 text-xs text-ink-subtle sm:flex-row">
+        <p>&copy; {year} FX Replay. All rights reserved.</p>
+        <p>Built with Astro 5, React 19 &amp; TypeScript.</p>
       </div>
     </div>
   </div>

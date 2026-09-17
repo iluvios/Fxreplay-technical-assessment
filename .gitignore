@@ -1,6 +1,7 @@
 # build output
 dist/
 .astro/
+.vercel/
 
 # dependencies
 node_modules/
@@ -13,16 +14,15 @@ pnpm-debug.log*
 
 # environment variables
 .env
-.env.production
+.env.*
+!.env.example
 
-# macos
+# macOS
 .DS_Store
+__MACOSX/
 
 # IDE
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
 .idea
-
-# Vercel
-.vercel

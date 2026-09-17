@@ -1,0 +1,113 @@
+---
+// Shared landing composition rendered by both `/` and `/freetrial`.
+// Kept in one place so the two entry points can never drift apart.
+import Layout from '../layouts/Layout.astro';
+import Navbar from './Navbar.astro';
+import Hero from './Hero.astro';
+import ChartSimulator from './ChartSimulator';
+import FeatureTabs from './FeatureTabs.astro';
+import KeyFeatures from './KeyFeatures.astro';
+import AssetCoverage from './AssetCoverage.astro';
+import CommunityStories from './CommunityStories.astro';
+import Footer from './Footer.astro';
+import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+import type { Assignment } from '../lib/experiments';
+import type { Attribution } from '../lib/attribution';
+
+interface Props {
+  copy: ExperimentVariantCopy;
+  /** Experiment id from ?lp=, or null when not in an experiment. */
+  lp: string | null;
+  assignment: Assignment | null;
+  visitorId: string;
+  attribution: Attribution;
+}
+
+const { copy, lp, assignment, visitorId, attribution } = Astro.props;
+
+// The experiment travels forward, not the resolved variant: /signup re-derives the arm
+// from the same visitor cookie, so a conversion cannot be mis-attributed via the URL.
+const ctaHref = lp ? `/signup?lp=${encodeURIComponent(lp)}` : '/signup';
+
+// Preview traffic is flagged so it never emits an exposure event.
+const liveAssignment = assignment && !assignment.is_preview ? assignment : null;
+
+const title = `${copy.hero.headline} | FX Replay`;
+---
+
+<Layout title={title} description={copy.hero.subheadline}>
+  <div
+    data-landing-root
+    data-variant-id={copy.variant_id}
+    data-visitor-id={visitorId}
+    data-experiment-id={liveAssignment?.experiment_id ?? ''}
+    data-experiment-name={liveAssignment?.experiment_name ?? ''}
+    data-is-control={liveAssignment ? String(liveAssignment.is_control) : ''}
+    data-channel={attribution.channel}
+    data-utm-source={attribution.utm_source ?? ''}
+    data-utm-medium={attribution.utm_medium ?? ''}
+    data-utm-campaign={attribution.utm_campaign ?? ''}
+  >
+    <Navbar ctaHref={ctaHref} />
+
+    <main>
+      <Hero copy={copy} ctaHref={ctaHref} />
+
+      <!-- The only React island on the page. -->
+      <section id="simulator" class="mx-auto max-w-[1100px] px-4 pb-8 sm:px-6">
+        <ChartSimulator client:visible />
+      </section>
+
+      <FeatureTabs copy={copy} ctaHref={ctaHref} />
+      <KeyFeatures copy={copy} />
+      <div id="assets"><AssetCoverage ctaHref={ctaHref} /></div>
+      <div id="community"><CommunityStories copy={copy} /></div>
+    </main>
+
+    <Footer ctaHref={ctaHref} />
+  </div>
+</Layout>
+
+<script>
+  // Lean analytics: one pageview, one exposure (experiments only), delegated CTA clicks.
+  import { analytics } from '../lib/analytics';
+
+  const root = document.querySelector<HTMLElement>('[data-landing-root]');
+
+  const experiment_id = root?.dataset.experimentId || undefined;
+  const experiment_name = root?.dataset.experimentName || undefined;
+
+  // Attribution rides on every event so funnels can be split by acquisition channel
+  // without a join back to the users table.
+  const context = {
+    variant_id: root?.dataset.variantId ?? 'control',
+    visitor_id: root?.dataset.visitorId,
+    channel: root?.dataset.channel || undefined,
+    utm_source: root?.dataset.utmSource || undefined,
+    utm_medium: root?.dataset.utmMedium || undefined,
+    utm_campaign: root?.dataset.utmCampaign || undefined,
+    ...(experiment_id ? { experiment_id, experiment_name } : {}),
+  };
+
+  analytics.init();
+  analytics.track('landing_page_viewed', context);
+
+  // Exposure fires only for real experiment participants. Emitting it for non-experiment
+  // traffic would inflate the denominator and understate conversion rate.
+  if (experiment_id) {
+    analytics.track('experiment_variant_exposed', {
+      ...context,
+      is_control: root?.dataset.isControl === 'true',
+    });
+  }
+
+  document.querySelectorAll<HTMLElement>('[data-analytics-cta]').forEach((el) => {
+    el.addEventListener('click', () => {
+      analytics.track('cta_button_clicked', {
+        ...context,
+        cta_location: el.dataset.analyticsCta as never,
+        cta_copy: el.textContent?.trim(),
+      });
+    });
+  });
+</script>

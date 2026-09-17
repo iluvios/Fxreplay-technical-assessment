@@ -1,7 +1,12 @@
 ---
-// Root landing page. Renders the same experience as /freetrial so traffic pointed at
-// either URL resolves the same experiment arm.
-// See freetrial.astro for the full rationale.
+// Public experiment target.
+//
+//   /freetrial?lp=1            -> runs experiment 1; visitor is bucketed into an arm
+//   /freetrial?lp=1&variant=1  -> QA preview of a specific arm (excluded from results)
+//   /freetrial                 -> control copy, no experiment participation
+//
+// SSR is required: the arm is resolved on the server and the copy serialised into the
+// HTML before delivery, so the variant headline is present on first paint (CLS 0.00).
 import LandingPage from '../components/LandingPage.astro';
 import { resolveExperience } from '../lib/experiments';
 import { getOrCreateVisitorId, rememberEnrolment } from '../lib/visitor';
@@ -9,6 +14,8 @@ import { getOrCreateAttribution } from '../lib/attribution';
 
 export const prerender = false;
 
+// A shared cache would pin every visitor to whichever arm rendered first and silently
+// collapse the traffic split, so this response must never be cached.
 Astro.response.headers.set('Cache-Control', 'private, no-store');
 
 const visitorId = getOrCreateVisitorId(Astro.cookies);

@@ -5,22 +5,45 @@ import posthog from 'posthog-js';
 export type GrowthEventName =
   | 'landing_page_viewed'
   | 'cta_button_clicked'
-  | 'signup_modal_opened'
+  | 'signup_page_viewed'
   | 'signup_form_started'
   | 'signup_form_submitted'
+  /**
+   * Emitted client-side for funnel completeness only. The canonical conversion is the
+   * server-side `signup_completed` from /api/users, which ad blockers cannot suppress.
+   */
   | 'signup_completed'
   | 'signup_error_encountered'
   | 'experiment_variant_exposed'
   | 'backtest_preview_interacted';
 
 export interface GrowthEventProperties {
-  cta_location?: 'hero' | 'nav' | 'feature_section' | 'sticky_bottom';
+  cta_location?:
+    | 'hero'
+    | 'nav'
+    | 'feature_section'
+    | 'feature_tabs'
+    | 'asset_coverage'
+    | 'footer'
+    | 'sticky_bottom';
   cta_copy?: string;
   experiment_id?: string;
+  experiment_name?: string;
   variant_id?: string;
-  experience_level?: string;
-  primary_market?: string;
+  /** True when the visitor was bucketed into the experiment's control arm. */
+  is_control?: boolean;
+  /** Anonymous id used for sticky experiment bucketing; joins client events to the server-assigned arm. */
+  visitor_id?: string;
+  /** Selected "primary trading goal" — the ICP segment the user self-identifies with. */
+  icp_focus?: string;
+  /** First-touch marketing attribution, so funnels can be split by acquisition source. */
+  channel?: string;
+  utm_source?: string;
+  utm_medium?: string;
+  utm_campaign?: string;
   error_message?: string;
+  error_code?: number | string;
+  error_field?: string;
   duration_ms?: number;
   [key: string]: unknown;
 }
@@ -69,7 +92,7 @@ class AnalyticsManager {
       posthog.capture(eventName, enrichedProperties);
     } else {
       // In local testing/evaluation mode, log nicely formatted event to console for code reviewers
-      console.log(`%c[Tracked Event: ${eventName}]`, 'color: #00D26A; font-weight: bold;', enrichedProperties);
+      console.log(`%c[Tracked Event: ${eventName}]`, 'color: #53B483; font-weight: bold;', enrichedProperties);
     }
   }
 
@@ -79,7 +102,7 @@ class AnalyticsManager {
     if (this.initialized) {
       posthog.identify(userId, traits);
     } else {
-      console.log(`%c[Identity Aliased: ${userId}]`, 'color: #2563EB; font-weight: bold;', traits);
+      console.log(`%c[Identity Aliased: ${userId}]`, 'color: #0260FD; font-weight: bold;', traits);
     }
   }
 

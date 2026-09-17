@@ -1,0 +1,147 @@
+-- FX Replay growth schema — Neon PostgreSQL
+-- Spec: docs/DATABASE_SCHEMA.md
+--
+-- Every statement is idempotent (IF NOT EXISTS / ON CONFLICT), so `npm run db:migrate`
+-- is safe to re-run. Order matters: referenced tables are created before their
+-- dependents.
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 1. icps — Ideal Customer Profiles.
+--    Mirrors docs/ICP_PROFILES.md so the scheduled AI analysis can query personas
+--    (pains, desires, emotion) alongside live conversion data instead of parsing
+--    markdown.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS icps (
+    id              VARCHAR(50) PRIMARY KEY,
+    slug            VARCHAR(50) UNIQUE NOT NULL,
+    name            VARCHAR(255) NOT NULL,
+    traffic_weight  NUMERIC(3, 2) NOT NULL DEFAULT 0.33,
+    primary_emotion VARCHAR(100) NOT NULL,
+    target_channel  VARCHAR(255) NOT NULL,
+    target_keywords TEXT[] NOT NULL DEFAULT '{}',
+    core_pains      JSONB NOT NULL DEFAULT '[]'::jsonb,
+    core_desires    JSONB NOT NULL DEFAULT '[]'::jsonb,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 2. experiments — experiment registry.
+--    `id` is the value carried in ?experimentId=, so it stays human-readable
+--    rather than a UUID.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS experiments (
+    id             VARCHAR(50) PRIMARY KEY,
+    icp_id         VARCHAR(50) REFERENCES icps(id) ON DELETE SET NULL,
+    name           VARCHAR(255) UNIQUE NOT NULL,
+    hypothesis     TEXT NOT NULL,
+    status         VARCHAR(50) NOT NULL DEFAULT 'draft',
+    primary_metric VARCHAR(100) NOT NULL DEFAULT 'signup_completed',
+    baseline_cr    NUMERIC(5, 2),
+    target_cr      NUMERIC(5, 2),
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    started_at     TIMESTAMPTZ,
+    ended_at       TIMESTAMPTZ,
+    CONSTRAINT experiments_status_check
+        CHECK (status IN ('draft', 'running', 'paused', 'completed'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_experiments_status ON experiments(status);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 3. experiment_variants — the arms of each experiment.
+--    `variant_key` is the authoritative join back to COPY_DICTIONARY in
+--    src/lib/copy-dictionary.ts, which remains the single source of truth for copy
+--    (type-safe, code-reviewed, no DB round-trip during SSR).
+--    `copy_payload` is a synced snapshot so the AI analysis can reason about the
+--    actual wording without importing TypeScript.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS experiment_variants (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id VARCHAR(50) NOT NULL REFERENCES experiments(id) ON DELETE CASCADE,
+    variant_key   VARCHAR(50) NOT NULL,
+    variant_name  VARCHAR(100) NOT NULL,
+    is_control    BOOLEAN NOT NULL DEFAULT FALSE,
+    weight        INTEGER NOT NULL DEFAULT 50,
+    active        BOOLEAN NOT NULL DEFAULT TRUE,
+    copy_payload  JSONB,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_variants_experiment_key
+    ON experiment_variants(experiment_id, variant_key);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 4. users — signups.
+--    Extends docs/DATABASE_SCHEMA.md with `visitor_id` and `experiment_id`:
+--    without them a conversion cannot be attributed back to the arm the visitor
+--    was bucketed into, which is the whole point of the experiment.
+--
+--    NOTE: `password` is stored as provided. This is a simulated signup flow for
+--    the assessment; a production system would store only an Argon2id/bcrypt hash
+--    and never the plaintext.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS users (
+    id            UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name          VARCHAR(255) NOT NULL,
+    email         VARCHAR(255) UNIQUE NOT NULL,
+    password      VARCHAR(255) NOT NULL,
+    icp_focus     VARCHAR(100) NOT NULL DEFAULT 'general',
+    visitor_id    UUID,
+    experiment_id VARCHAR(50) REFERENCES experiments(id) ON DELETE SET NULL,
+    variant_id    UUID REFERENCES experiment_variants(id) ON DELETE SET NULL,
+    -- First-touch marketing attribution (see src/lib/attribution.ts).
+    utm_source    VARCHAR(255),
+    utm_medium    VARCHAR(255),
+    utm_campaign  VARCHAR(255),
+    utm_content   VARCHAR(255),
+    utm_term      VARCHAR(255),
+    click_id      VARCHAR(255),
+    referrer      VARCHAR(500),
+    channel       VARCHAR(50),
+    landing_path  VARCHAR(255),
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Additive migrations for databases created before these columns existed.
+ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_medium   VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_content  VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS utm_term     VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS click_id     VARCHAR(255);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS referrer     VARCHAR(500);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS channel      VARCHAR(50);
+ALTER TABLE users ADD COLUMN IF NOT EXISTS landing_path VARCHAR(255);
+
+CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+CREATE INDEX IF NOT EXISTS idx_users_variant_id ON users(variant_id);
+CREATE INDEX IF NOT EXISTS idx_users_visitor_id ON users(visitor_id);
+CREATE INDEX IF NOT EXISTS idx_users_channel ON users(channel);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 5. posthog_event_metrics — daily aggregate snapshots pulled from the PostHog
+--    API by the scheduled evaluation job, so experiment results survive
+--    independently of PostHog retention.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS posthog_event_metrics (
+    id                   UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id        VARCHAR(50) NOT NULL REFERENCES experiments(id) ON DELETE CASCADE,
+    variant_id           UUID NOT NULL REFERENCES experiment_variants(id) ON DELETE CASCADE,
+    snapshot_date        DATE NOT NULL DEFAULT CURRENT_DATE,
+    impressions_count    INTEGER NOT NULL DEFAULT 0,
+    cta_clicks_count     INTEGER NOT NULL DEFAULT 0,
+    signup_starts_count  INTEGER NOT NULL DEFAULT 0,
+    signups_count        INTEGER NOT NULL DEFAULT 0,
+    conversion_rate      NUMERIC(5, 2) GENERATED ALWAYS AS (
+        CASE WHEN impressions_count > 0
+             THEN ROUND((signups_count::numeric / impressions_count::numeric) * 100, 2)
+             ELSE 0 END
+    ) STORED,
+    avg_dwell_time_sec   NUMERIC(6, 1) DEFAULT 0.0,
+    avg_scroll_depth_pct NUMERIC(5, 2) DEFAULT 0.0,
+    p_value              NUMERIC(6, 4),
+    stat_sig_reached     BOOLEAN NOT NULL DEFAULT FALSE,
+    synced_at            TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uq_variant_snapshot_date UNIQUE (variant_id, snapshot_date)
+);
+
+CREATE INDEX IF NOT EXISTS idx_metrics_experiment ON posthog_event_metrics(experiment_id);

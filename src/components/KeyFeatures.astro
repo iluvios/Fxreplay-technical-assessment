@@ -1,0 +1,100 @@
+---
+// Key features + analytics showcase — docs/FRONTEND_BUILD_SPEC.md §3.5
+// Pillars come from the variant dictionary; bar chart is pure CSS (0 KB JS).
+import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+
+interface Props {
+  copy: ExperimentVariantCopy;
+}
+
+const { copy } = Astro.props;
+
+// "Performance by time" mockup — deterministic hourly P&L split.
+const hours = [
+  { label: '00', up: 38, down: 14 },
+  { label: '01', up: 22, down: 30 },
+  { label: '02', up: 54, down: 10 },
+  { label: '03', up: 78, down: 18 },
+  { label: '04', up: 46, down: 26 },
+  { label: '05', up: 62, down: 12 },
+  { label: '06', up: 88, down: 22 },
+  { label: '07', up: 34, down: 40 },
+  { label: '08', up: 70, down: 16 },
+];
+---
+
+<section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+  <div class="mb-12 text-center">
+    <h2 class="mb-3 text-3xl font-black text-ink md:text-4xl">Explore our key features</h2>
+    <p class="text-ink-muted">Maximize your trading potential with FX Replay.</p>
+  </div>
+
+  <div class="grid items-start gap-8 lg:grid-cols-2">
+    <!-- Feature list -->
+    <ul class="space-y-3">
+      {
+        copy.pillars.map((pillar, i) => (
+          <li
+            class={`rounded-xl border p-5 transition-colors ${
+              i === 1
+                ? 'border-brand/40 bg-brand/10'
+                : 'border-line bg-surface-raised hover:border-line-strong'
+            }`}
+          >
+            <h3 class="mb-1.5 text-base font-bold text-ink">{pillar.title}</h3>
+            <p class="text-sm leading-relaxed text-ink-muted">{pillar.description}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <!-- Performance-by-time card -->
+    <div class="rounded-2xl border border-line bg-surface-raised p-6">
+      <div class="mb-6 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-ink">Performance by time</h3>
+        <span
+          class="rounded-lg border border-line bg-surface-inset px-3 py-1.5 text-xs font-semibold text-ink-muted"
+        >
+          By hour
+        </span>
+      </div>
+
+      <div
+        class="flex h-[260px] items-center justify-between gap-2"
+        role="img"
+        aria-label="Profit and loss by hour of day"
+      >
+        {
+          hours.map((hour) => (
+            <div class="flex h-full flex-1 flex-col items-center justify-center gap-1">
+              <div class="flex w-full flex-1 flex-col justify-end">
+                <div
+                  class="w-full rounded-t bg-success"
+                  style={`height: ${hour.up}%`}
+                  title={`${hour.label}:00 profit`}
+                />
+              </div>
+              <div class="flex w-full flex-1 flex-col justify-start">
+                <div
+                  class="w-full rounded-b bg-error"
+                  style={`height: ${hour.down}%`}
+                  title={`${hour.label}:00 loss`}
+                />
+              </div>
+              <span class="font-mono text-[10px] text-ink-subtle">{hour.label}</span>
+            </div>
+          ))
+        }
+      </div>
+
+      <div class="mt-4 flex items-center gap-4 border-t border-line pt-4 text-xs text-ink-muted">
+        <span class="flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-success"></span> Profit
+        </span>
+        <span class="flex items-center gap-1.5">
+          <span class="h-2 w-2 rounded-full bg-error"></span> Loss
+        </span>
+      </div>
+    </div>
+  </div>
+</section>

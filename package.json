@@ -7,14 +7,19 @@
     "start": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "astro": "astro"
+    "astro": "astro",
+    "db:migrate": "node scripts/db.mjs migrate",
+    "db:status": "node scripts/db.mjs status",
+    "db:report": "node scripts/db.mjs report"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.1",
     "@astrojs/tailwind": "^5.1.5",
     "@astrojs/vercel": "^8.0.7",
+    "@neondatabase/serverless": "^1.1.0",
     "astro": "^5.4.2",
     "clsx": "^2.1.1",
+    "lightweight-charts": "^4.2.3",
     "lucide-react": "^0.475.0",
     "posthog-js": "^1.226.0",
     "react": "^19.0.0",

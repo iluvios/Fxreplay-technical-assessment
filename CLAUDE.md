@@ -1,25 +1,63 @@
-# CLAUDE.md — Project Memory & Agent Constraints for FX Replay Growth
+# CLAUDE.md — Master Directive for Claude Code (Opus 5)
 
-## Project Overview
-This repository contains the high-performance growth & marketing experience for FX Replay ("Try FX Replay Free"), built with **Astro 5 (SSR mode with static prerendering)**, **React 19 Islands**, **TypeScript**, and **Tailwind CSS**.
+## 1. Primary Mandate (Token-Saving Rule)
+**YOUR SOLE ROLE IS TO IMPLEMENT THE UI/UX DESIGN AND PAGE STRUCTURE.**  
+Do not invent copy, do not design new layouts, do not write documentation, and do not over-engineer analytics. All specifications, image URLs, and copy dictionaries are already finalized in `docs/`:
 
-## Architectural Principles
-1. **Zero-JS Default:** Marketing content, copy, and SEO sections must be pure Astro components (`.astro`) with zero client-side JavaScript to maintain sub-second LCP and 98+ Lighthouse scores.
-2. **Islands for Interactivity:** Use React (`.tsx`) exclusively for interactive surfaces (e.g., `<SignupModal client:load />`, `<BacktestPreview client:idle />`).
-3. **Type-Safe API Contracts:** All API endpoints (`/api/users`) must validate request payloads using Zod schemas (`src/lib/schemas.ts`) before processing.
-4. **Explicit Analytics Instrumentation:** Every user conversion interaction must dispatch a typed event via `analytics.track()` in `src/lib/analytics.ts`. Never rely on unvalidated autocapture.
+* **Visual Design Blueprint:** Read `docs/FRONTEND_BUILD_SPEC.md` (Matches `fxreplay.com` 1:1).
+* **Live Image & Logo CDN URLs:** Read `docs/IMAGE_ASSETS_CATALOG.md` (Direct Webflow CDN links for all logos, mockups, and broker badges).
+* **Copy Dictionaries:** Read `docs/EXPERIMENT_VARIANTS_COPY.md` (Use the exact pre-written copy variables; do NOT brainstorm new copy).
+* **Database Schema:** Read `docs/DATABASE_SCHEMA.md` (5 PostgreSQL tables for Neon).
 
-## Design System & Tokens
-- **Backgrounds:** `#080A0F` (Base dark), `#0F131C` (Card surface), `#1E2638` (Borders).
-- **Accents:** `#2563EB` (FX Replay Brand Blue), `#00D26A` (Profit green/success), `#F93958` (Loss red/error).
-- **Typography:** Inter (Headings & Body), JetBrains Mono (Financial metrics & timestamps).
+---
 
-## Common Development Commands
-- `npm run dev`: Start local development server on `http://localhost:4321`.
-- `npm run build`: Compile static pages and Vercel serverless functions into `dist/`.
-- `npm run preview`: Preview production build locally.
+## 2. Core Architectural & Flow Constraints
+1. **NO POPUP MODAL FOR SIGNUP:**
+   - All CTA buttons (`Get started for free`, `Test Your Prop Strategy Free`, etc.) must link directly to the **dedicated signup page: `/signup?lp=X`**.
+   - Create `src/pages/signup.astro` containing the registration form (`name`, `email`, `password`, `icp_focus`) posting to `/api/users`.
+2. **Framework & Islands Discipline (Astro 5 + Tailwind + React):**
+   - Marketing content, navigation, feature tabs, and asset tables must be **100% static `.astro` components (0 KB client JavaScript)** to preserve sub-second LCP.
+   - The only React island is `src/components/ChartSimulator.tsx` (`client:visible` using `lightweight-charts`).
+3. **Zero Cumulative Layout Shift (CLS = 0.00):**
+   - On `src/pages/freetrial.astro` (and `index.astro`), read `Astro.url.searchParams.get('lp')` on the server to inject the pre-written copy before HTML delivery. Never swap text client-side.
+4. **Lean Analytics:**
+   - Do not spend tokens setting up complex PostHog trackers. Use a simple clean helper in `src/lib/analytics.ts` that dispatches typed events.
 
-## Claude Code Agent Workflow Constraints
-- When creating or modifying A/B experiment components, never remove baseline conversion event triggers.
-- Always run `npm run build` after editing TypeScript or Astro files to ensure type compliance before committing.
-- Commit messages must follow conventional commits: `feat:`, `fix:`, `perf:`, `docs:`, or `cro:`.
+---
+
+## 3. Official FX Replay Brand Kit Tokens
+**Source of truth:** `docs/FX_Replay_Brand_Kit/Brand Kit/brand-kit.html` (44 primitives + 60 semantic tokens).
+**Implemented in:** `tailwind.config.mjs` — the single source of truth for the UI palette.
+Use the Tailwind token classes below; **never hard-code hex in components.**
+
+> Note: the kit's `tokens/tokens.css` and `source/` folders were missing from the delivered
+> archive, so the semantic layer is reproduced in `tailwind.config.mjs`.
+
+| Purpose | Semantic token | Primitive | Hex | Tailwind class |
+|---|---|---|---|---|
+| Brand / CTA | `btn-bg-primary-active` | `blue-600` | `#0260FD` | `bg-brand` |
+| Brand hover | `btn-bg-primary-hover` | `blue-800` | `#01307F` | `hover:bg-brand-hover` |
+| Brand pressed | `btn-bg-primary-pressed` | `blue-900` | `#012054` | `bg-brand-pressed` |
+| Brand accent (text) | `btn-text-minimal-hover` | `blue-500` | `#2C7BFD` | `text-brand-light` |
+| Page ground | `bg-primary` | `dark-900` | `#030303` | `bg-surface` |
+| Card surface | `bg-secondary` | `dark-800` | `#0A0A0A` | `bg-surface-raised` |
+| Inner surface | `bg-tertiary` | `dark-700` | `#1A1A1A` | `bg-surface-inset` |
+| Border | `border-primary` | `dark-700` | `#1A1A1A` | `border-line` |
+| Border (strong) | `border-secondary` | `dark-600` | `#2A2A2A` | `border-line-strong` |
+| Text primary | `text-primary` | `neutral-50` | `#F6F6F6` | `text-ink` |
+| Text secondary | `text-secondary` | `neutral-200` | `#D1D1D1` | `text-ink-muted` |
+| Text disabled | `text-disabled` | `neutral-400` | `#888888` | `text-ink-subtle` |
+| Profit / success | `success` | — | `#53B483` | `text-success` / `bg-success` |
+| Loss / error | `error` | — | `#CD3636` | `text-error` / `bg-error` |
+| Warning | `warning` | — | `#CD8A36` | `text-warning` / `bg-warning` |
+
+- **Typography:**
+  - **Headings (`h1`, `h2`, `h3`):** `Lato` (400, 700, 900) — `font-display`
+  - **Body / UI Text:** `Nunito Sans` (400, 600, 700) — `font-sans` (default)
+  - **Metrics & Tickers:** `JetBrains Mono` (400, 500) — `font-mono`
+
+---
+
+## 4. Key Development Commands
+- `npm run dev`: Start local development server (`http://localhost:4321`)
+- `npm run build`: Verify TypeScript compliance and build output

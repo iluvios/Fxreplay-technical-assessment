@@ -1,0 +1,50 @@
+---
+// Static hero (0 KB client JS) — docs/FRONTEND_BUILD_SPEC.md §3.2
+// Copy is injected server-side, so the variant headline is already in the HTML
+// on first paint. No client-side text swap => CLS 0.00.
+import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+
+interface Props {
+  copy: ExperimentVariantCopy;
+  /** Signup destination, already carrying experiment or personalisation context. */
+  ctaHref: string;
+}
+
+const { copy, ctaHref } = Astro.props;
+const { hero, eyebrow } = copy;
+---
+
+<section class="relative overflow-hidden">
+  <!-- Ambient brand glow behind the headline -->
+  <div
+    class="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-brand/10 blur-[120px]"
+    aria-hidden="true"
+  >
+  </div>
+
+  <div class="relative mx-auto max-w-[1000px] px-4 pb-12 pt-24 text-center sm:px-6">
+    <p
+      class="mb-6 inline-block rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-light"
+    >
+      {eyebrow}
+    </p>
+
+    <h1 class="mb-6 text-4xl font-black leading-[1.15] text-ink md:text-6xl">
+      {hero.headline}
+    </h1>
+
+    <p class="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-ink-muted md:text-xl">
+      {hero.subheadline}
+    </p>
+
+    <a
+      href={ctaHref}
+      data-analytics-cta="hero"
+      class="inline-block rounded-full bg-brand px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-brand/25 transition-colors hover:bg-brand-hover"
+    >
+      {hero.cta_text}
+    </a>
+
+    <p class="mt-3 text-sm text-ink-subtle">{hero.cta_subtext}</p>
+  </div>
+</section>

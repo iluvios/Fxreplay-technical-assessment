@@ -9,7 +9,8 @@ Use this skill when proposing or scaffolding a new growth experiment in the FX R
 ## Workflow Execution Steps:
 
 1. **Hypothesis Definition:**
-   - Ask the user or read the issue for the target component (e.g., `InteractiveHero.tsx` or `PricingSection.astro`).
+   - Ask the user or read the issue for the target component (e.g., `Hero.astro`, `FeatureTabs.astro`, or `ChartSimulator.tsx`).
+   - For copy-only tests, prefer adding a variant to `src/lib/copy-dictionary.ts` over forking a component.
    - Define:
      - `experiment_id`: e.g., `exp_pricing_cta_v2`
      - `control`: Baseline copy/layout

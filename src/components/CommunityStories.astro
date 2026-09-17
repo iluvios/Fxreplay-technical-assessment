@@ -1,0 +1,93 @@
+---
+// Community stories — docs/EXPERIMENT_VARIANTS_COPY.md §2
+// Control shows the baseline fxreplay.com traders (with video thumbnails);
+// segmented variants show ICP-personalized reviews (initials avatar).
+import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+
+interface Props {
+  copy: ExperimentVariantCopy;
+}
+
+const { copy } = Astro.props;
+
+// docs/IMAGE_ASSETS_CATALOG.md §4
+const THUMBNAILS: Record<string, string> = {
+  'Dylan Mitch':
+    'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a6be91730923c2d9cb0ec5c_dylan%20new.png',
+  'Mack Grey':
+    'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a6be917264feb8fdb7d3be0_mack%20new.png',
+  'Ryan Condi':
+    'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a6be917341d16ea323cafde_ryan%20new.png',
+};
+
+const initials = (name: string) =>
+  name
+    .split(' ')
+    .map((part) => part[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+---
+
+<section class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+  <div class="mb-12 text-center">
+    <h2 class="mb-3 text-3xl font-black text-ink md:text-4xl">Stories from the community</h2>
+    <p class="text-ink-muted">Real experiences from traders committed to earning their progress.</p>
+  </div>
+
+  <div class="grid gap-5 md:grid-cols-3">
+    {
+      copy.reviews.map((review) => {
+        const thumbnail = THUMBNAILS[review.name];
+        return (
+          <figure class="flex h-full flex-col rounded-2xl border border-line bg-surface-raised p-6">
+            <blockquote class="flex-1 text-sm leading-relaxed text-ink-muted">
+              “{review.quote}”
+            </blockquote>
+
+            <figcaption class="mt-6 flex items-center gap-3 border-t border-line pt-5">
+              {thumbnail ? (
+                <img
+                  src={thumbnail}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  width="44"
+                  height="44"
+                  class="h-11 w-11 rounded-full object-cover"
+                  aria-hidden="true"
+                />
+              ) : (
+                <span
+                  class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-surface-inset font-mono text-sm font-medium text-ink"
+                  aria-hidden="true"
+                >
+                  {initials(review.name)}
+                </span>
+              )}
+
+              <div class="min-w-0">
+                <p class="truncate text-sm font-bold text-ink">{review.name}</p>
+                <p class="truncate text-xs text-ink-subtle">
+                  {review.role}
+                  {review.credential && review.credential !== 'Trustpilot Verified'
+                    ? ` · ${review.credential}`
+                    : ''}
+                </p>
+              </div>
+
+              {review.verified && (
+                <span
+                  class="ml-auto shrink-0 rounded-full border border-success-dark bg-success/10 px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-success"
+                  title="Verified review"
+                >
+                  Verified
+                </span>
+              )}
+            </figcaption>
+          </figure>
+        );
+      })
+    }
+  </div>
+</section>
