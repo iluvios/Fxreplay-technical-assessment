@@ -7,7 +7,7 @@
 // be changed by editing the query string.
 import Layout from '../layouts/Layout.astro';
 import SignupForm from '../components/SignupForm';
-import { resolveExperience } from '../lib/experiments';
+import { resolveLiveExperience } from '../lib/experiment-repo';
 import { getOrCreateVisitorId, rememberEnrolment } from '../lib/visitor';
 import { getOrCreateAttribution } from '../lib/attribution';
 
@@ -21,7 +21,7 @@ const visitorId = getOrCreateVisitorId(Astro.cookies);
 getOrCreateAttribution(Astro.cookies, Astro.url, Astro.request.headers.get('referer'));
 
 const lp = Astro.url.searchParams.get('lp');
-const { copy, assignment } = resolveExperience({
+const { copy, assignment } = await resolveLiveExperience({
   lp,
   previewVariant: Astro.url.searchParams.get('variant'),
   visitorId,

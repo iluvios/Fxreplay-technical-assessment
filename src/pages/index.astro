@@ -3,7 +3,7 @@
 // either URL resolves the same experiment arm.
 // See freetrial.astro for the full rationale.
 import LandingPage from '../components/LandingPage.astro';
-import { resolveExperience } from '../lib/experiments';
+import { resolveLiveExperience } from '../lib/experiment-repo';
 import { getOrCreateVisitorId, rememberEnrolment } from '../lib/visitor';
 import { getOrCreateAttribution } from '../lib/attribution';
 
@@ -19,7 +19,7 @@ const attribution = getOrCreateAttribution(
 );
 
 const lp = Astro.url.searchParams.get('lp');
-const { copy, assignment } = resolveExperience({
+const { copy, assignment } = await resolveLiveExperience({
   lp,
   previewVariant: Astro.url.searchParams.get('variant'),
   visitorId,

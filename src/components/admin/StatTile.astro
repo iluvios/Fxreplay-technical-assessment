@@ -1,0 +1,23 @@
+---
+interface Props {
+  label: string;
+  value: string;
+  /** Short qualifier under the number — what it is measured against. */
+  hint?: string;
+  tone?: 'neutral' | 'positive' | 'negative';
+}
+
+const { label, value, hint, tone = 'neutral' } = Astro.props;
+
+const VALUE_TONE = {
+  neutral: 'text-ink',
+  positive: 'text-success',
+  negative: 'text-error',
+};
+---
+
+<div class="rounded-xl border border-line bg-surface-raised p-4">
+  <p class="text-xs font-semibold uppercase tracking-wide text-ink-subtle">{label}</p>
+  <p class:list={['mt-2 font-mono text-2xl font-medium', VALUE_TONE[tone]]}>{value}</p>
+  {hint && <p class="mt-1 text-xs text-ink-subtle">{hint}</p>}
+</div>

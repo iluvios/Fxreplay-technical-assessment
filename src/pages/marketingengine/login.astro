@@ -1,0 +1,87 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { isSignedIn, ADMIN_USER, ADMIN_PASSWORD } from '../../lib/admin-auth';
+
+export const prerender = false;
+
+const next = Astro.url.searchParams.get('next') ?? '/marketingengine';
+
+if (isSignedIn(Astro.cookies)) {
+  return Astro.redirect(next, 302);
+}
+
+const failed = Astro.url.searchParams.get('err') !== null;
+
+// The credentials are hardcoded for the assessment, so showing them beats making a
+// reviewer hunt through source to open the dashboard.
+const showsHint = !process.env.ADMIN_PASSWORD && !import.meta.env.ADMIN_PASSWORD;
+---
+
+<Layout title="Sign in · FX Replay Growth Engine" description="Internal growth console.">
+  <div class="flex min-h-screen items-center justify-center px-4">
+    <div class="w-full max-w-sm">
+      <p class="mb-2 font-display text-lg font-black tracking-tight text-ink">
+        FX Replay <span class="text-brand-light">Growth Engine</span>
+      </p>
+      <p class="mb-8 text-sm text-ink-subtle">Internal experiment console.</p>
+
+      <form method="post" action="/api/admin/session" class="space-y-4">
+        <input type="hidden" name="next" value={next} />
+
+        <div>
+          <label for="username" class="mb-1.5 block text-sm font-semibold text-ink-muted">
+            Username
+          </label>
+          <input
+            id="username"
+            name="username"
+            type="text"
+            required
+            autocomplete="username"
+            class="w-full rounded-lg border border-line-strong bg-surface-inset px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-brand"
+          />
+        </div>
+
+        <div>
+          <label for="password" class="mb-1.5 block text-sm font-semibold text-ink-muted">
+            Password
+          </label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            required
+            autocomplete="current-password"
+            class="w-full rounded-lg border border-line-strong bg-surface-inset px-3 py-2.5 text-sm text-ink outline-none transition-colors focus:border-brand"
+          />
+        </div>
+
+        {
+          failed && (
+            <p class="rounded-lg border border-error-dark bg-error-dark/15 px-3 py-2 text-sm text-error">
+              Incorrect username or password.
+            </p>
+          )
+        }
+
+        <button
+          type="submit"
+          class="w-full rounded-lg bg-brand px-4 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
+        >
+          Sign in
+        </button>
+      </form>
+
+      {
+        showsHint && (
+          <p class="mt-6 rounded-lg border border-line bg-surface-raised px-3 py-2 font-mono text-xs text-ink-subtle">
+            {ADMIN_USER} / {ADMIN_PASSWORD}
+            <span class="mt-1 block font-sans text-ink-subtle">
+              Assessment default. Set ADMIN_USER / ADMIN_PASSWORD to override.
+            </span>
+          </p>
+        )
+      }
+    </div>
+  </div>
+</Layout>

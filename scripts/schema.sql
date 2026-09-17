@@ -40,10 +40,21 @@ CREATE TABLE IF NOT EXISTS experiments (
     target_cr      NUMERIC(5, 2),
     created_at     TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     started_at     TIMESTAMPTZ,
-    ended_at       TIMESTAMPTZ,
-    CONSTRAINT experiments_status_check
-        CHECK (status IN ('draft', 'running', 'paused', 'completed'))
+    ended_at       TIMESTAMPTZ
 );
+
+-- Additive migrations for databases created before these columns existed.
+--   winning_variant_id  set by the evaluation agent when it auto-promotes an arm.
+--   evaluated_at        last time the agent scored this experiment, so the admin can
+--                       see at a glance whether a decision is stale.
+ALTER TABLE experiments ADD COLUMN IF NOT EXISTS winning_variant_id UUID;
+ALTER TABLE experiments ADD COLUMN IF NOT EXISTS evaluated_at TIMESTAMPTZ;
+
+-- The agent introduces two terminal states beyond the original four, so the check is
+-- rebuilt rather than created once. Dropping first keeps this re-runnable.
+ALTER TABLE experiments DROP CONSTRAINT IF EXISTS experiments_status_check;
+ALTER TABLE experiments ADD CONSTRAINT experiments_status_check
+    CHECK (status IN ('draft', 'running', 'paused', 'completed', 'winner_promoted', 'killed'));
 
 CREATE INDEX IF NOT EXISTS idx_experiments_status ON experiments(status);
 
@@ -145,3 +156,55 @@ CREATE TABLE IF NOT EXISTS posthog_event_metrics (
 );
 
 CREATE INDEX IF NOT EXISTS idx_metrics_experiment ON posthog_event_metrics(experiment_id);
+
+-- ─────────────────────────────────────────────────────────────────────────────
+-- 6. experiment_decisions — audit log of the autonomous evaluation agent.
+--
+--    Every run writes a row, including the runs that decide to do nothing. An
+--    automated system that can pause traffic or rewrite the default experience
+--    has to be reconstructable after the fact: which numbers were on the table,
+--    which rule fired, what the AI said, and whether the action was actually
+--    executed. Without that, "the agent killed my test" is unfalsifiable.
+--
+--    The statistics are stored alongside the decision rather than recomputed on
+--    read, because the underlying counts keep moving — a rationale has to be
+--    judged against the data that produced it.
+-- ─────────────────────────────────────────────────────────────────────────────
+CREATE TABLE IF NOT EXISTS experiment_decisions (
+    id                UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    experiment_id     VARCHAR(50) NOT NULL REFERENCES experiments(id) ON DELETE CASCADE,
+    variant_id        UUID REFERENCES experiment_variants(id) ON DELETE SET NULL,
+    -- PROMOTE | KILL | HUMAN_REVIEW | CONTINUE
+    decision          VARCHAR(30) NOT NULL,
+    -- cron | manual | human
+    trigger_source    VARCHAR(20) NOT NULL DEFAULT 'cron',
+    -- Data source the counts came from: posthog | database
+    metrics_source    VARCHAR(20) NOT NULL DEFAULT 'database',
+
+    control_visitors  INTEGER NOT NULL DEFAULT 0,
+    control_signups   INTEGER NOT NULL DEFAULT 0,
+    variant_visitors  INTEGER NOT NULL DEFAULT 0,
+    variant_signups   INTEGER NOT NULL DEFAULT 0,
+    control_cr        NUMERIC(7, 3),
+    variant_cr        NUMERIC(7, 3),
+    relative_lift_pct NUMERIC(8, 2),
+    z_score           NUMERIC(8, 4),
+    p_value           NUMERIC(7, 5),
+    confidence_pct    NUMERIC(6, 3),
+    sample_target     INTEGER,
+    is_significant    BOOLEAN NOT NULL DEFAULT FALSE,
+    is_underpowered   BOOLEAN NOT NULL DEFAULT TRUE,
+
+    -- Deterministic explanation of which rule fired, written in code.
+    rationale         TEXT NOT NULL,
+    -- Qualitative narrative from the LLM layer; null when no model was reachable.
+    ai_diagnosis      TEXT,
+    ai_model          VARCHAR(80),
+    -- What the system actually changed, or why it changed nothing.
+    action_taken      TEXT,
+    executed          BOOLEAN NOT NULL DEFAULT FALSE,
+    created_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_decisions_experiment
+    ON experiment_decisions(experiment_id, created_at DESC);

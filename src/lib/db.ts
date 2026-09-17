@@ -22,11 +22,32 @@ export class DuplicateEmailError extends Error {
   }
 }
 
+/**
+ * Filters for the admin user list. Every field is optional and null means "no filter",
+ * so one query shape serves the unfiltered list and any combination of narrowing.
+ */
+export interface UserListFilters {
+  /** Substring match against name or email. */
+  search?: string | null;
+  /** First-touch acquisition channel, as classified in attribution.ts. */
+  channel?: string | null;
+  /** Self-declared primary trading goal. */
+  icp_focus?: string | null;
+  /** Restrict to conversions attributed to one experiment. */
+  experiment_id?: string | null;
+}
+
 export interface UserRepository {
-  list(limit: number, offset: number): Promise<{ users: User[]; total: number }>;
+  list(
+    limit: number,
+    offset: number,
+    filters?: UserListFilters
+  ): Promise<{ users: User[]; total: number }>;
   findById(id: string): Promise<User | null>;
   create(input: CreateUserInput, context: SignupContext): Promise<User>;
   update(id: string, input: UpdateUserInput): Promise<User | null>;
+  /** Distinct channels present in the data, for the admin filter control. */
+  distinctChannels(): Promise<string[]>;
 }
 
 const PG_UNIQUE_VIOLATION = '23505';
@@ -62,12 +83,45 @@ function toUser(row: Record<string, any>): User {
 class NeonUserRepository implements UserRepository {
   constructor(private readonly sql: ReturnType<typeof neon>) {}
 
-  async list(limit: number, offset: number) {
+  async list(limit: number, offset: number, filters: UserListFilters = {}) {
+    // Each predicate short-circuits on a null parameter, so the filter combination is
+    // expressed once rather than assembled as SQL strings. Values stay bound, so a
+    // search term can contain anything without escaping concerns.
+    const search = filters.search?.trim() || null;
+    const channel = filters.channel || null;
+    const icpFocus = filters.icp_focus || null;
+    const experimentId = filters.experiment_id || null;
+
     const rows = await this.sql`
-      SELECT * FROM users ORDER BY created_at DESC LIMIT ${limit} OFFSET ${offset}
+      SELECT * FROM users
+       WHERE (${search}::text IS NULL
+              OR email ILIKE '%' || ${search} || '%'
+              OR name  ILIKE '%' || ${search} || '%')
+         AND (${channel}::text IS NULL OR channel = ${channel})
+         AND (${icpFocus}::text IS NULL OR icp_focus = ${icpFocus})
+         AND (${experimentId}::text IS NULL OR experiment_id = ${experimentId})
+       ORDER BY created_at DESC
+       LIMIT ${limit} OFFSET ${offset}
     `;
-    const [{ count }] = (await this.sql`SELECT COUNT(*)::int AS count FROM users`) as any[];
+
+    const [{ count }] = (await this.sql`
+      SELECT COUNT(*)::int AS count FROM users
+       WHERE (${search}::text IS NULL
+              OR email ILIKE '%' || ${search} || '%'
+              OR name  ILIKE '%' || ${search} || '%')
+         AND (${channel}::text IS NULL OR channel = ${channel})
+         AND (${icpFocus}::text IS NULL OR icp_focus = ${icpFocus})
+         AND (${experimentId}::text IS NULL OR experiment_id = ${experimentId})
+    `) as any[];
+
     return { users: (rows as any[]).map(toUser), total: count };
+  }
+
+  async distinctChannels() {
+    const rows = (await this.sql`
+      SELECT DISTINCT channel FROM users WHERE channel IS NOT NULL ORDER BY channel
+    `) as any[];
+    return rows.map((row) => row.channel as string);
   }
 
   async findById(id: string) {
@@ -123,11 +177,28 @@ class NeonUserRepository implements UserRepository {
 class InMemoryUserRepository implements UserRepository {
   private users = new Map<string, User & { password: string }>();
 
-  async list(limit: number, offset: number) {
-    const all = [...this.users.values()].sort(
-      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-    );
+  async list(limit: number, offset: number, filters: UserListFilters = {}) {
+    const search = filters.search?.trim().toLowerCase() ?? null;
+
+    const all = [...this.users.values()]
+      .filter((user) => {
+        if (search && !`${user.name} ${user.email}`.toLowerCase().includes(search)) return false;
+        if (filters.channel && user.channel !== filters.channel) return false;
+        if (filters.icp_focus && user.icp_focus !== filters.icp_focus) return false;
+        if (filters.experiment_id && user.experiment_id !== filters.experiment_id) return false;
+        return true;
+      })
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
     return { users: all.slice(offset, offset + limit).map(stripPassword), total: all.length };
+  }
+
+  async distinctChannels() {
+    const channels = new Set<string>();
+    for (const user of this.users.values()) {
+      if (user.channel) channels.add(user.channel);
+    }
+    return [...channels].sort();
   }
 
   async findById(id: string) {
@@ -214,11 +285,14 @@ class ResilientUserRepository implements UserRepository {
     }
   }
 
-  list(limit: number, offset: number) {
-    return this.run((repo) => repo.list(limit, offset));
+  list(limit: number, offset: number, filters?: UserListFilters) {
+    return this.run((repo) => repo.list(limit, offset, filters));
   }
   findById(id: string) {
     return this.run((repo) => repo.findById(id));
+  }
+  distinctChannels() {
+    return this.run((repo) => repo.distinctChannels());
   }
   create(input: CreateUserInput, context: SignupContext) {
     return this.run((repo) => repo.create(input, context));

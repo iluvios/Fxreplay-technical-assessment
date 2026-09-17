@@ -8,7 +8,7 @@
 // SSR is required: the arm is resolved on the server and the copy serialised into the
 // HTML before delivery, so the variant headline is present on first paint (CLS 0.00).
 import LandingPage from '../components/LandingPage.astro';
-import { resolveExperience } from '../lib/experiments';
+import { resolveLiveExperience } from '../lib/experiment-repo';
 import { getOrCreateVisitorId, rememberEnrolment } from '../lib/visitor';
 import { getOrCreateAttribution } from '../lib/attribution';
 
@@ -26,7 +26,9 @@ const attribution = getOrCreateAttribution(
 );
 
 const lp = Astro.url.searchParams.get('lp');
-const { copy, assignment } = resolveExperience({
+// Arms come from the database, so pausing an experiment or killing a variant in
+// /marketingengine (or via the evaluation agent) changes what visitors see.
+const { copy, assignment } = await resolveLiveExperience({
   lp,
   previewVariant: Astro.url.searchParams.get('variant'),
   visitorId,

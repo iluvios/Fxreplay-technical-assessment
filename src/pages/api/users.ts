@@ -3,7 +3,9 @@ import { ZodError } from 'zod';
 import { userDb, DuplicateEmailError } from '../../lib/db';
 import { CreateUserSchema, type SignupContext } from '../../lib/schemas';
 import { ATTRIBUTION_COOKIE, type Attribution } from '../../lib/attribution';
-import { VISITOR_COOKIE, EXPERIMENT_COOKIE, resolveExperience } from '../../lib/experiments';
+import { VISITOR_COOKIE, EXPERIMENT_COOKIE } from '../../lib/experiments';
+import { resolveLiveExperience } from '../../lib/experiment-repo';
+import { COPY_DICTIONARY } from '../../lib/copy-dictionary';
 import { captureServerEvent } from '../../lib/analytics-server';
 
 export const prerender = false;
@@ -22,10 +24,10 @@ const json = (body: unknown, status: number) =>
  * The arm is re-derived from the same (visitorId, experiment) hash used to render the
  * landing page, so it is guaranteed to match what the visitor actually saw.
  */
-function buildSignupContext(
+async function buildSignupContext(
   cookies: Parameters<APIRoute>[0]['cookies'],
   lp: string | null
-): SignupContext {
+): Promise<SignupContext> {
   const visitorId = cookies.get(VISITOR_COOKIE)?.value ?? null;
 
   let attribution: Partial<Attribution> = {};
@@ -39,7 +41,7 @@ function buildSignupContext(
   // if the request omits ?lp=. The arm is re-derived from the visitor hash either way.
   const experimentId = lp ?? cookies.get(EXPERIMENT_COOKIE)?.value ?? null;
   const assignment = visitorId
-    ? resolveExperience({ lp: experimentId, visitorId }).assignment
+    ? (await resolveLiveExperience({ lp: experimentId, visitorId })).assignment
     : null;
 
   return {
@@ -65,7 +67,12 @@ export const GET: APIRoute = async ({ url }) => {
     const limit = Math.min(Math.max(Number(url.searchParams.get('limit')) || 50, 1), 100);
     const offset = Math.max(Number(url.searchParams.get('offset')) || 0, 0);
 
-    const { users, total } = await userDb.list(limit, offset);
+    const { users, total } = await userDb.list(limit, offset, {
+      search: url.searchParams.get('search'),
+      channel: url.searchParams.get('channel'),
+      icp_focus: url.searchParams.get('icp_focus'),
+      experiment_id: url.searchParams.get('experiment_id'),
+    });
 
     return json({ success: true, data: users, pagination: { limit, offset, total } }, 200);
   } catch (error) {
@@ -86,11 +93,18 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
 
   try {
     const input = CreateUserSchema.parse(payload);
-    const context = buildSignupContext(cookies, url.searchParams.get('lp'));
+    const context = await buildSignupContext(cookies, url.searchParams.get('lp'));
 
     const user = await userDb.create(input, context);
 
     // Canonical conversion event — emitted server-side so ad blockers cannot suppress it.
+    //
+    // `variant_id` must be the same value the client stamps on `experiment_variant_exposed`
+    // (COPY_DICTIONARY[key].variant_id), or the exposure and the conversion land under
+    // different breakdown values and the funnel silently reports a 0% rate for every
+    // non-control arm. `variant_key` rides along for joins back to the database.
+    const variantCopy = context.variant_key ? COPY_DICTIONARY[context.variant_key] : undefined;
+
     await captureServerEvent({
       event: 'signup_completed',
       distinctId: context.visitor_id ?? user.id,
@@ -98,7 +112,11 @@ export const POST: APIRoute = async ({ request, cookies, url }) => {
         user_id: user.id,
         icp_focus: user.icp_focus,
         experiment_id: context.experiment_id,
-        variant_id: context.variant_key,
+        variant_id: variantCopy?.variant_id ?? context.variant_key,
+        variant_key: context.variant_key,
+        // Queried directly rather than via distinct_id, so exposures and conversions
+        // are counted over the same identifier.
+        visitor_id: context.visitor_id,
         channel: context.channel,
         utm_source: context.utm_source,
         utm_medium: context.utm_medium,

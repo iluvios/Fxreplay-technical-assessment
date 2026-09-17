@@ -1,0 +1,39 @@
+---
+// Status badge shared by the experiment tables and detail screens.
+//
+// Colour carries meaning here: a killed experiment and a promoted winner are both
+// "finished", but one is a loss and one is a win, and a growth dashboard that renders
+// them identically buries the only two outcomes anyone scans for.
+interface Props {
+  status: string;
+}
+
+const { status } = Astro.props;
+
+const TONE: Record<string, string> = {
+  running: 'border-brand/40 bg-brand/15 text-brand-light',
+  draft: 'border-line-strong bg-surface-inset text-ink-subtle',
+  paused: 'border-warning-dark bg-warning-dark/15 text-warning',
+  completed: 'border-line-strong bg-surface-inset text-ink-muted',
+  winner_promoted: 'border-success-dark bg-success-dark/20 text-success',
+  killed: 'border-error-dark bg-error-dark/20 text-error',
+};
+
+const LABEL: Record<string, string> = {
+  running: 'Running',
+  draft: 'Draft',
+  paused: 'Paused',
+  completed: 'Completed',
+  winner_promoted: 'Winner promoted',
+  killed: 'Killed',
+};
+---
+
+<span
+  class:list={[
+    'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold',
+    TONE[status] ?? TONE.draft,
+  ]}
+>
+  {LABEL[status] ?? status}
+</span>

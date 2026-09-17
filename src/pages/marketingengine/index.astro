@@ -1,0 +1,276 @@
+---
+// Growth console overview: what is running, what converted, what the agent last decided.
+import AdminShell from '../../components/admin/AdminShell.astro';
+import StatTile from '../../components/admin/StatTile.astro';
+import StatusPill from '../../components/admin/StatusPill.astro';
+import { experimentDb } from '../../lib/experiment-repo';
+import { userDb } from '../../lib/db';
+import { formatSignedPct } from '../../lib/stats';
+
+export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const [experiments, icps, decisions, allUsers] = await Promise.all([
+  experimentDb.list(),
+  experimentDb.listIcps(),
+  experimentDb.listDecisions(undefined, 5),
+  userDb.list(1, 0),
+]);
+
+// Signup counts per arm come from `users`, not from PostHog. A row in `users` is a
+// verified account creation; a PostHog event is a client-side claim that one happened.
+// For the headline conversion number, the database is the stricter source.
+const signupsByExperiment = await Promise.all(
+  experiments.map(async (experiment) => ({
+    experiment,
+    counts: await experimentDb.signupCountsByVariant(experiment.id),
+  }))
+);
+
+interface Row {
+  id: string;
+  name: string;
+  status: string;
+  icp_id: string | null;
+  controlSignups: number;
+  variantSignups: number;
+  totalSignups: number;
+  liftPct: number | null;
+  evaluated_at: string | null;
+}
+
+const rows: Row[] = signupsByExperiment.map(({ experiment, counts }) => {
+  const byId = new Map(counts.map((count) => [count.variant_id, count.signups]));
+  const control = experiment.variants.find((variant) => variant.is_control);
+  const treatment = experiment.variants.find((variant) => !variant.is_control);
+
+  const controlSignups = control ? (byId.get(control.id) ?? 0) : 0;
+  const variantSignups = treatment ? (byId.get(treatment.id) ?? 0) : 0;
+
+  // Without exposure counts the only honest comparison is signups per arm. Since the
+  // split is 50/50 by construction, the ratio is still a usable directional read — but
+  // it is labelled as a signup ratio, not a conversion-rate lift.
+  const liftPct =
+    controlSignups > 0 ? ((variantSignups - controlSignups) / controlSignups) * 100 : null;
+
+  return {
+    id: experiment.id,
+    name: experiment.name,
+    status: experiment.status,
+    icp_id: experiment.icp_id,
+    controlSignups,
+    variantSignups,
+    totalSignups: controlSignups + variantSignups,
+    liftPct,
+    evaluated_at: experiment.evaluated_at,
+  };
+});
+
+const runningCount = experiments.filter((experiment) => experiment.status === 'running').length;
+const attributedSignups = rows.reduce((sum, row) => sum + row.totalSignups, 0);
+const icpById = new Map(icps.map((icp) => [icp.id, icp]));
+
+const lastDecision = decisions[0] ?? null;
+
+const dateFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+---
+
+<AdminShell
+  title="Overview"
+  subtitle="Live experiment state, attributed signups, and the agent's latest calls."
+  active="overview"
+>
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <StatTile label="Experiments" value={String(experiments.length)} hint={`${runningCount} running`} />
+    <StatTile label="Total signups" value={String(allUsers.total)} hint="All time, all sources" />
+    <StatTile
+      label="Attributed to a test"
+      value={String(attributedSignups)}
+      hint={
+        allUsers.total > 0
+          ? `${Math.round((attributedSignups / allUsers.total) * 100)}% of signups`
+          : 'No signups yet'
+      }
+    />
+    <StatTile
+      label="Last agent run"
+      value={lastDecision ? lastDecision.decision.replace('_', ' ') : '—'}
+      hint={lastDecision ? dateFormat.format(new Date(lastDecision.created_at)) : 'Never run'}
+      tone={
+        lastDecision?.decision === 'PROMOTE'
+          ? 'positive'
+          : lastDecision?.decision === 'KILL'
+            ? 'negative'
+            : 'neutral'
+      }
+    />
+  </div>
+
+  <section class="mt-10">
+    <div class="mb-3 flex items-center justify-between">
+      <h2 class="font-display text-lg font-bold text-ink">Experiments</h2>
+      <a
+        href="/marketingengine/experiments"
+        class="text-sm font-semibold text-brand-light hover:underline"
+      >
+        Manage →
+      </a>
+    </div>
+
+    <div class="overflow-x-auto rounded-xl border border-line bg-surface-raised">
+      <table class="w-full text-left text-sm">
+        <thead class="border-b border-line text-xs uppercase tracking-wide text-ink-subtle">
+          <tr>
+            <th class="px-4 py-3 font-semibold">Experiment</th>
+            <th class="px-4 py-3 font-semibold">ICP</th>
+            <th class="px-4 py-3 text-right font-semibold">Control</th>
+            <th class="px-4 py-3 text-right font-semibold">Variant</th>
+            <th class="px-4 py-3 text-right font-semibold">Signup ratio</th>
+            <th class="px-4 py-3 font-semibold">Status</th>
+            <th class="px-4 py-3 font-semibold">Last evaluated</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            rows.map((row) => (
+              <tr class="border-b border-line last:border-0 hover:bg-surface-inset/50">
+                <td class="px-4 py-3">
+                  <a
+                    href={`/marketingengine/experiments/${row.id}`}
+                    class="font-semibold text-ink hover:text-brand-light"
+                  >
+                    {row.name}
+                  </a>
+                  <span class="ml-2 font-mono text-xs text-ink-subtle">?lp={row.id}</span>
+                </td>
+                <td class="px-4 py-3 text-ink-muted">
+                  {row.icp_id ? (icpById.get(row.icp_id)?.name ?? row.icp_id) : '—'}
+                </td>
+                <td class="px-4 py-3 text-right font-mono text-ink-muted">{row.controlSignups}</td>
+                <td class="px-4 py-3 text-right font-mono text-ink-muted">{row.variantSignups}</td>
+                <td
+                  class:list={[
+                    'px-4 py-3 text-right font-mono',
+                    row.liftPct === null
+                      ? 'text-ink-subtle'
+                      : row.liftPct > 0
+                        ? 'text-success'
+                        : row.liftPct < 0
+                          ? 'text-error'
+                          : 'text-ink-muted',
+                  ]}
+                >
+                  {formatSignedPct(row.liftPct)}
+                </td>
+                <td class="px-4 py-3">
+                  <StatusPill status={row.status} />
+                </td>
+                <td class="px-4 py-3 text-xs text-ink-subtle">
+                  {row.evaluated_at ? dateFormat.format(new Date(row.evaluated_at)) : 'Never'}
+                </td>
+              </tr>
+            ))
+          }
+          {
+            rows.length === 0 && (
+              <tr>
+                <td colspan="7" class="px-4 py-10 text-center text-ink-subtle">
+                  No experiments yet.{' '}
+                  <a href="/marketingengine/experiments" class="text-brand-light hover:underline">
+                    Create one
+                  </a>
+                  .
+                </td>
+              </tr>
+            )
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  {
+    icps.length > 0 && (
+      <section class="mt-10">
+        <h2 class="mb-3 font-display text-lg font-bold text-ink">ICP directory</h2>
+        <div class="grid gap-4 md:grid-cols-3">
+          {icps.map((icp) => (
+            <article class="rounded-xl border border-line bg-surface-raised p-4">
+              <div class="flex items-start justify-between gap-3">
+                <h3 class="font-display font-bold text-ink">{icp.name}</h3>
+                <span class="shrink-0 font-mono text-xs text-brand-light">
+                  {Math.round(icp.traffic_weight * 100)}%
+                </span>
+              </div>
+              <p class="mt-1 text-xs font-semibold uppercase tracking-wide text-ink-subtle">
+                {icp.primary_emotion}
+              </p>
+              <p class="mt-3 text-xs text-ink-muted">{icp.target_channel}</p>
+              <ul class="mt-3 space-y-1.5">
+                {icp.core_pains.slice(0, 2).map((pain) => (
+                  <li class="flex gap-2 text-xs text-ink-muted">
+                    <span class="text-error" aria-hidden="true">
+                      ▸
+                    </span>
+                    {pain}
+                  </li>
+                ))}
+              </ul>
+            </article>
+          ))}
+        </div>
+      </section>
+    )
+  }
+
+  {
+    decisions.length > 0 && (
+      <section class="mt-10">
+        <div class="mb-3 flex items-center justify-between">
+          <h2 class="font-display text-lg font-bold text-ink">Recent agent decisions</h2>
+          <a href="/marketingengine/agent" class="text-sm font-semibold text-brand-light hover:underline">
+            Full log →
+          </a>
+        </div>
+        <ul class="space-y-2">
+          {decisions.map((decision) => (
+            <li class="rounded-xl border border-line bg-surface-raised p-4">
+              <div class="flex flex-wrap items-center gap-3">
+                <span
+                  class:list={[
+                    'font-mono text-xs font-medium',
+                    decision.decision === 'PROMOTE'
+                      ? 'text-success'
+                      : decision.decision === 'KILL'
+                        ? 'text-error'
+                        : decision.decision === 'HUMAN_REVIEW'
+                          ? 'text-warning'
+                          : 'text-ink-subtle',
+                  ]}
+                >
+                  {decision.decision}
+                </span>
+                <a
+                  href={`/marketingengine/experiments/${decision.experiment_id}`}
+                  class="text-sm font-semibold text-ink hover:text-brand-light"
+                >
+                  {decision.experiment_id}
+                </a>
+                <span class="text-xs text-ink-subtle">
+                  {dateFormat.format(new Date(decision.created_at))} · {decision.trigger_source}
+                </span>
+              </div>
+              <p class="mt-2 text-sm leading-relaxed text-ink-muted">{decision.rationale}</p>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+</AdminShell>

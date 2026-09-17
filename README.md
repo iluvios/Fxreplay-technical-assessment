@@ -4,6 +4,11 @@
 
 ---
 
+👉 **[Read the Complete Unified Technical Submission (SUBMISSION.md)](SUBMISSION.md)**  
+*(All 6 required deliverables from the challenge specification synthesized into a single, concise document).*
+
+---
+
 ## 📑 Challenge Deliverables Map
 
 Every required deliverable from the technical challenge specification has been documented in depth:

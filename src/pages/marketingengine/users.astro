@@ -1,0 +1,258 @@
+---
+// Signup list: who converted, from which channel, on which experiment arm.
+//
+// Attribution columns are the reason this screen exists. A list of email addresses is
+// a CRM export; a list of email addresses next to the ad campaign and the headline that
+// produced them is what tells you where to spend the next dollar.
+import AdminShell from '../../components/admin/AdminShell.astro';
+import StatTile from '../../components/admin/StatTile.astro';
+import { userDb } from '../../lib/db';
+import { experimentDb } from '../../lib/experiment-repo';
+
+export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const params = Astro.url.searchParams;
+
+const PAGE_SIZE = 50;
+const page = Math.max(Number(params.get('page')) || 1, 1);
+const offset = (page - 1) * PAGE_SIZE;
+
+const filters = {
+  search: params.get('search'),
+  channel: params.get('channel'),
+  icp_focus: params.get('icp_focus'),
+  experiment_id: params.get('experiment_id'),
+};
+
+const [{ users, total }, channels, experiments, unfiltered] = await Promise.all([
+  userDb.list(PAGE_SIZE, offset, filters),
+  userDb.distinctChannels(),
+  experimentDb.list(),
+  userDb.list(1, 0),
+]);
+
+// Variant ids on a user row are opaque UUIDs; resolve them to the arm name so the table
+// reads as "which message converted them" rather than a foreign key.
+const variantNames = new Map<string, string>();
+for (const experiment of experiments) {
+  for (const variant of experiment.variants) {
+    variantNames.set(variant.id, variant.variant_name);
+  }
+}
+
+const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+const isFiltered = Object.values(filters).some(Boolean);
+
+/** Preserve the active filters when moving between pages. */
+function pageHref(target: number): string {
+  const next = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value) next.set(key, value);
+  }
+  next.set('page', String(target));
+  return `/marketingengine/users?${next}`;
+}
+
+const dateFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const inputClass =
+  'w-full rounded-lg border border-line-strong bg-surface-inset px-3 py-2 text-sm text-ink outline-none transition-colors focus:border-brand';
+const labelClass = 'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-ink-subtle';
+
+const ICP_OPTIONS = [
+  { value: 'prop_firm', label: 'Prop firm' },
+  { value: 'weekend', label: 'Weekend' },
+  { value: 'systematizer', label: 'Systematizer' },
+  { value: 'general', label: 'General' },
+];
+
+const attributedCount = users.filter((user) => user.variant_id).length;
+---
+
+<AdminShell
+  title="Users"
+  subtitle="Every account created through /signup, with its acquisition and experiment attribution."
+  active="users"
+>
+  <div class="mb-6 grid gap-4 sm:grid-cols-3">
+    <StatTile label="Total signups" value={String(unfiltered.total)} hint="All time" />
+    <StatTile
+      label="Matching filters"
+      value={String(total)}
+      hint={isFiltered ? 'Filtered view' : 'No filters applied'}
+    />
+    <StatTile
+      label="Attributed on this page"
+      value={`${attributedCount} / ${users.length}`}
+      hint="Rows carrying an experiment arm"
+    />
+  </div>
+
+  <form
+    method="get"
+    action="/marketingengine/users"
+    class="mb-6 grid gap-4 rounded-xl border border-line bg-surface-raised p-4 sm:grid-cols-2 lg:grid-cols-5"
+  >
+    <div class="lg:col-span-2">
+      <label for="search" class={labelClass}>Search</label>
+      <input
+        id="search"
+        name="search"
+        value={filters.search ?? ''}
+        placeholder="Name or email"
+        class={inputClass}
+      />
+    </div>
+
+    <div>
+      <label for="channel" class={labelClass}>Channel</label>
+      <select id="channel" name="channel" class={inputClass}>
+        <option value="">All</option>
+        {
+          channels.map((channel) => (
+            <option value={channel} selected={channel === filters.channel}>
+              {channel}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="icp_focus" class={labelClass}>Trading goal</label>
+      <select id="icp_focus" name="icp_focus" class={inputClass}>
+        <option value="">All</option>
+        {
+          ICP_OPTIONS.map((option) => (
+            <option value={option.value} selected={option.value === filters.icp_focus}>
+              {option.label}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div>
+      <label for="experiment_id" class={labelClass}>Experiment</label>
+      <select id="experiment_id" name="experiment_id" class={inputClass}>
+        <option value="">All</option>
+        {
+          experiments.map((experiment) => (
+            <option value={experiment.id} selected={experiment.id === filters.experiment_id}>
+              {experiment.name}
+            </option>
+          ))
+        }
+      </select>
+    </div>
+
+    <div class="flex gap-2 sm:col-span-2 lg:col-span-5">
+      <button
+        type="submit"
+        class="rounded-lg bg-brand px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
+      >
+        Apply
+      </button>
+      {
+        isFiltered && (
+          <a
+            href="/marketingengine/users"
+            class="rounded-lg border border-line-strong px-5 py-2 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+          >
+            Clear
+          </a>
+        )
+      }
+    </div>
+  </form>
+
+  <div class="overflow-x-auto rounded-xl border border-line bg-surface-raised">
+    <table class="w-full text-left text-sm">
+      <thead class="border-b border-line text-xs uppercase tracking-wide text-ink-subtle">
+        <tr>
+          <th class="px-4 py-3 font-semibold">Name</th>
+          <th class="px-4 py-3 font-semibold">Email</th>
+          <th class="px-4 py-3 font-semibold">Goal</th>
+          <th class="px-4 py-3 font-semibold">Channel</th>
+          <th class="px-4 py-3 font-semibold">Campaign</th>
+          <th class="px-4 py-3 font-semibold">Arm</th>
+          <th class="px-4 py-3 font-semibold">Signed up</th>
+        </tr>
+      </thead>
+      <tbody>
+        {
+          users.map((user) => (
+            <tr class="border-b border-line last:border-0 hover:bg-surface-inset/50">
+              <td class="px-4 py-3 font-semibold text-ink">{user.name}</td>
+              <td class="px-4 py-3 font-mono text-xs text-ink-muted">{user.email}</td>
+              <td class="px-4 py-3 text-xs text-ink-muted">{user.icp_focus}</td>
+              <td class="px-4 py-3 text-xs text-ink-muted">{user.channel ?? '—'}</td>
+              <td class="px-4 py-3 text-xs text-ink-subtle">
+                {user.utm_campaign ?? user.utm_source ?? '—'}
+              </td>
+              <td class="px-4 py-3 text-xs">
+                {user.variant_id ? (
+                  <a
+                    href={`/marketingengine/experiments/${user.experiment_id}`}
+                    class="text-brand-light hover:underline"
+                  >
+                    {variantNames.get(user.variant_id) ?? user.variant_id}
+                  </a>
+                ) : (
+                  <span class="text-ink-subtle">Not in a test</span>
+                )}
+              </td>
+              <td class="px-4 py-3 text-xs text-ink-subtle">
+                {dateFormat.format(new Date(user.created_at))}
+              </td>
+            </tr>
+          ))
+        }
+        {
+          users.length === 0 && (
+            <tr>
+              <td colspan="7" class="px-4 py-10 text-center text-ink-subtle">
+                {isFiltered ? 'No users match these filters.' : 'No signups yet.'}
+              </td>
+            </tr>
+          )
+        }
+      </tbody>
+    </table>
+  </div>
+
+  {
+    totalPages > 1 && (
+      <div class="mt-4 flex items-center justify-between">
+        <p class="text-xs text-ink-subtle">
+          Page {page} of {totalPages} · {total} users
+        </p>
+        <div class="flex gap-2">
+          {page > 1 && (
+            <a
+              href={pageHref(page - 1)}
+              class="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+            >
+              Previous
+            </a>
+          )}
+          {page < totalPages && (
+            <a
+              href={pageHref(page + 1)}
+              class="rounded-lg border border-line-strong px-3 py-1.5 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
+            >
+              Next
+            </a>
+          )}
+        </div>
+      </div>
+    )
+  }
+</AdminShell>

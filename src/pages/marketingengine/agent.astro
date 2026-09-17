@@ -1,0 +1,246 @@
+---
+// The agent's operating panel: what it is configured to do, and everything it has done.
+import AdminShell from '../../components/admin/AdminShell.astro';
+import StatTile from '../../components/admin/StatTile.astro';
+import { experimentDb } from '../../lib/experiment-repo';
+import { RULES } from '../../lib/agent/decide';
+import { isPostHogConfigured } from '../../lib/posthog-query';
+import { requiredSampleSize, formatSignedPct } from '../../lib/stats';
+
+export const prerender = false;
+
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+
+const [decisions, experiments] = await Promise.all([
+  experimentDb.listDecisions(undefined, 100),
+  experimentDb.list(),
+]);
+
+const running = experiments.filter((experiment) => experiment.status === 'running');
+const executed = decisions.filter((decision) => decision.executed);
+
+const telemetryReady = isPostHogConfigured();
+const modelReady = Boolean(process.env.OPENAI_API_KEY ?? import.meta.env.OPENAI_API_KEY);
+const webhookReady = Boolean(
+  process.env.GROWTH_ALERT_WEBHOOK_URL ?? import.meta.env.GROWTH_ALERT_WEBHOOK_URL
+);
+
+const dateFormat = new Intl.DateTimeFormat('en-GB', {
+  day: 'numeric',
+  month: 'short',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+const DECISION_TONE: Record<string, string> = {
+  PROMOTE: 'text-success',
+  KILL: 'text-error',
+  HUMAN_REVIEW: 'text-warning',
+  CONTINUE: 'text-ink-subtle',
+};
+
+const STAGES = [
+  {
+    title: '1 · Ingest',
+    body: 'PostHog supplies unique exposures and converters per arm; Neon supplies verified account rows. Where the two disagree on signups, the database wins.',
+  },
+  {
+    title: '2 · Gate',
+    body: `Sample-size check against the MDE target, then a pooled two-tailed Z-test. Computed in code, never by a model, so the decision is reproducible from its inputs.`,
+  },
+  {
+    title: '3 · Diagnose',
+    body: 'A model explains the result against the ICP’s pains and the copy actually under test. It receives the decision as a fact and cannot change it.',
+  },
+  {
+    title: '4 · Act',
+    body: 'Promote, kill, escalate, or leave running. Both destructive outcomes are reversible from this console in one click.',
+  },
+];
+
+const dependencies = [
+  {
+    label: 'PostHog telemetry',
+    ready: telemetryReady,
+    detail: telemetryReady
+      ? 'Exposure counts available — the agent may act autonomously.'
+      : 'POSTHOG_PERSONAL_API_KEY / POSTHOG_PROJECT_ID missing. Without a denominator no conversion rate exists, so every run escalates to a human instead of acting.',
+  },
+  {
+    label: 'AI diagnosis',
+    ready: modelReady,
+    detail: modelReady
+      ? `Model narrative enabled (${process.env.OPENAI_MODEL ?? import.meta.env.OPENAI_MODEL ?? 'gpt-5.6-luna'}).`
+      : 'OPENAI_API_KEY missing. Runs still complete and still act; the narrative falls back to a deterministic summary.',
+  },
+  {
+    label: 'Alert webhook',
+    ready: webhookReady,
+    detail: webhookReady
+      ? 'Decisions are posted to the configured Slack/Discord webhook.'
+      : 'GROWTH_ALERT_WEBHOOK_URL missing. Decisions are recorded here but not pushed anywhere.',
+  },
+];
+---
+
+<AdminShell
+  title="Evaluation agent"
+  subtitle="Runs twice daily at 08:00 and 20:00 UTC, or on demand."
+  active="agent"
+>
+  <div class="mb-8 flex flex-wrap items-center gap-3">
+    <form method="post" action="/api/engine/evaluate">
+      <button
+        type="submit"
+        class="rounded-lg bg-brand px-5 py-2.5 text-sm font-bold text-white transition-colors hover:bg-brand-hover"
+      >
+        Evaluate all running experiments
+      </button>
+    </form>
+    <form method="post" action="/api/engine/evaluate">
+      <input type="hidden" name="dry_run" value="true" />
+      <button
+        type="submit"
+        class="rounded-lg border border-line-strong px-5 py-2.5 text-sm font-semibold text-ink-muted transition-colors hover:border-line-strongest hover:text-ink"
+      >
+        Dry run
+      </button>
+    </form>
+    <p class="text-xs text-ink-subtle">
+      A dry run computes and reports everything but writes nothing and changes no traffic.
+    </p>
+  </div>
+
+  <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+    <StatTile label="Running experiments" value={String(running.length)} hint="In scope for the cron" />
+    <StatTile label="Decisions recorded" value={String(decisions.length)} hint="Last 100 runs" />
+    <StatTile
+      label="Actions executed"
+      value={String(executed.length)}
+      hint="Promotes and kills applied"
+    />
+    <StatTile
+      label="Sample target"
+      value={String(requiredSampleSize())}
+      hint="Visitors per arm at 3.2% baseline"
+    />
+  </div>
+
+  <section class="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+    {
+      STAGES.map((stage) => (
+        <article class="rounded-xl border border-line bg-surface-raised p-4">
+          <h3 class="font-display text-sm font-bold text-ink">{stage.title}</h3>
+          <p class="mt-2 text-xs leading-relaxed text-ink-muted">{stage.body}</p>
+        </article>
+      ))
+    }
+  </section>
+
+  <section class="mt-10 grid gap-6 lg:grid-cols-2">
+    <div>
+      <h2 class="mb-3 font-display text-lg font-bold text-ink">Decision thresholds</h2>
+      <dl class="divide-y divide-line rounded-xl border border-line bg-surface-raised">
+        <div class="flex items-center justify-between px-4 py-3">
+          <dt class="text-sm text-ink-muted">Auto-promote</dt>
+          <dd class="font-mono text-xs text-success">
+            p &lt; {RULES.PROMOTE_MAX_P} · lift ≥ +{RULES.PROMOTE_MIN_LIFT_PCT}% · powered
+          </dd>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <dt class="text-sm text-ink-muted">Auto-kill</dt>
+          <dd class="font-mono text-xs text-error">
+            lift ≤ {RULES.KILL_MAX_LIFT_PCT}% · n ≥ {RULES.KILL_MIN_VISITORS} · p &lt; {RULES.KILL_MAX_P}
+          </dd>
+        </div>
+        <div class="flex items-center justify-between px-4 py-3">
+          <dt class="text-sm text-ink-muted">Human review</dt>
+          <dd class="font-mono text-xs text-warning">
+            p in [{RULES.REVIEW_P_BAND[0]}, {RULES.REVIEW_P_BAND[1]}] · or no exposure data
+          </dd>
+        </div>
+      </dl>
+      <p class="mt-2 text-xs leading-relaxed text-ink-subtle">
+        The kill gate is looser than the promote gate deliberately: a false kill costs a little
+        learning and reverses in one click, while a false promote reshapes the whole funnel.
+      </p>
+    </div>
+
+    <div>
+      <h2 class="mb-3 font-display text-lg font-bold text-ink">Dependencies</h2>
+      <ul class="divide-y divide-line rounded-xl border border-line bg-surface-raised">
+        {
+          dependencies.map((dependency) => (
+            <li class="px-4 py-3">
+              <div class="flex items-center gap-2">
+                <span
+                  class:list={[
+                    'h-1.5 w-1.5 rounded-full',
+                    dependency.ready ? 'bg-success' : 'bg-warning',
+                  ]}
+                  aria-hidden="true"
+                />
+                <span class="text-sm font-semibold text-ink">{dependency.label}</span>
+                <span
+                  class:list={[
+                    'font-mono text-xs',
+                    dependency.ready ? 'text-success' : 'text-warning',
+                  ]}
+                >
+                  {dependency.ready ? 'ready' : 'not configured'}
+                </span>
+              </div>
+              <p class="mt-1 text-xs leading-relaxed text-ink-subtle">{dependency.detail}</p>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </section>
+
+  <section class="mt-10">
+    <h2 class="mb-3 font-display text-lg font-bold text-ink">Decision log</h2>
+    {
+      decisions.length === 0 ? (
+        <p class="rounded-xl border border-line bg-surface-raised p-5 text-sm text-ink-subtle">
+          No runs recorded yet. Trigger one above, or wait for the 08:00 UTC pass.
+        </p>
+      ) : (
+        <ul class="space-y-2">
+          {decisions.map((decision) => (
+            <li class="rounded-xl border border-line bg-surface-raised p-4">
+              <div class="flex flex-wrap items-center gap-3">
+                <span class:list={['font-mono text-xs font-medium', DECISION_TONE[decision.decision]]}>
+                  {decision.decision}
+                </span>
+                <a
+                  href={`/marketingengine/experiments/${decision.experiment_id}`}
+                  class="text-sm font-semibold text-ink hover:text-brand-light"
+                >
+                  {decision.experiment_id}
+                </a>
+                <span class="text-xs text-ink-subtle">
+                  {dateFormat.format(new Date(decision.created_at))} · {decision.trigger_source} ·{' '}
+                  {decision.metrics_source}
+                  {decision.executed ? ' · executed' : ''}
+                </span>
+                {decision.p_value !== null && (
+                  <span class="font-mono text-xs text-ink-subtle">
+                    p={Number(decision.p_value).toFixed(4)} · lift{' '}
+                    {formatSignedPct(decision.relative_lift_pct)}
+                  </span>
+                )}
+              </div>
+              <p class="mt-2 text-sm leading-relaxed text-ink-muted">{decision.rationale}</p>
+              {decision.ai_diagnosis && (
+                <p class="mt-2 border-l-2 border-brand/40 pl-3 text-sm leading-relaxed text-ink-muted">
+                  {decision.ai_diagnosis}
+                </p>
+              )}
+            </li>
+          ))}
+        </ul>
+      )
+    }
+  </section>
+</AdminShell>
