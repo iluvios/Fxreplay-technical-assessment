@@ -54,6 +54,12 @@ Unknown or missing `lp` values fall back to control. Copy lives in
 [`src/lib/copy-dictionary.ts`](src/lib/copy-dictionary.ts); design tokens live in
 [`tailwind.config.mjs`](tailwind.config.mjs), transcribed from the official brand kit.
 
+### 🔐 Growth Admin Console (`/marketingengine`)
+Internal experimentation, user attribution registry, and AI agent command center:
+* **Route:** `/marketingengine`
+* **Credentials:** `admin` / `fxreplay`
+* **Features:** KPI conversion overview, side-by-side variant copy comparison, arm CRUD & traffic allocation, user attribution list, and autonomous agent evaluation.
+
 ---
 
 ## 🔌 Users API Documentation

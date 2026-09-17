@@ -48,7 +48,21 @@ Open **`http://localhost:4321`** in your browser.
 | `/signup?lp=X` | Dedicated Signup Page | Full-page form (no popup modal), client & server Zod validation. |
 | `/api/users` | Users API | `GET` (list paginated) & `POST` (create user with attribution). |
 | `/api/users/:id` | Users API | `GET` (read by ID) & `PATCH` (update profile). |
+| `/marketingengine` | Growth Admin Console | Internal experimentation, users registry & agent control center. |
 | `/ingest/*` | Telemetry Reverse Proxy | First-party reverse proxy to PostHog to bypass adblockers. |
+
+### 🔐 Growth Admin Console Credentials (`/marketingengine`)
+The internal growth experimentation dashboard is cookie-gated via `src/middleware.ts` (unauthorized page visits redirect to login with `?next=`, API routes return 401).
+
+* **URL:** `https://fxreplay-technical-assessment.vercel.app/marketingengine` (or `http://localhost:4321/marketingengine`)
+* **Username:** `admin`
+* **Password:** `fxreplay`
+*(Configured in `src/lib/admin-auth.ts`, overridable via `ADMIN_USER` and `ADMIN_PASSWORD` env vars).*
+
+**Features inside the Console:**
+* **Overview:** High-level acquisition KPI tiles (views, signups, overall CR), experiment table, ICP directory, and recent agent calls.
+* **Experiments:** List & create experiments; detail inspector with arm CRUD (traffic weight, active toggle, promote, delete), side-by-side copy diff, live Z-test statistics, and decision audit logs.
+* **Users:** Paginated registry filterable by search, acquisition channel, trading goal, and experiment arm, showing exactly which variant converted each trader.
 
 ### Database Verification Commands
 ```bash
