@@ -14,11 +14,21 @@
 export const Z_CRITICAL_95 = 1.96;
 
 /**
- * Minimum detectable effect the test is powered for, in absolute conversion-rate
- * points. 0.8pp against a ~3.2% baseline is roughly a +25% relative lift — the
- * smallest move that would actually change how traffic is bought.
+ * Minimum detectable effect the test is powered for, in absolute conversion-rate points.
+ *
+ * NOTE ON THE SPEC: docs/AUTONOMOUS_EXPERIMENT_SERVICE.md §2 states δ = 0.008 and
+ * concludes n ≈ 1,240 per arm. Those two are inconsistent — 16·0.032·0.968 / 0.008²
+ * is 7,744, not 1,240. The 1,240 figure is what you get at δ = 0.02, and 1,240 is the
+ * threshold the rest of the system is written against (the decision matrix's "n ≥ 1,200"
+ * and .claude/skills/growth-experiment-analyzer). So δ = 0.02 is used here, which keeps
+ * the documented threshold intact.
+ *
+ * What that buys, stated plainly: at a 3.2% baseline this test is powered to detect a
+ * 2pp move — a +62% relative lift. Anything subtler will read as underpowered until far
+ * more traffic accumulates. Detecting a +25% lift (δ = 0.008) would need ~7,700 visitors
+ * per arm; set `mde` explicitly on `evaluateTest` when that is the question being asked.
  */
-export const DEFAULT_MDE_ABSOLUTE = 0.008;
+export const DEFAULT_MDE_ABSOLUTE = 0.02;
 
 /** Baseline conversion rate used for sample-size planning when the experiment has none. */
 export const DEFAULT_BASELINE_CR = 0.032;

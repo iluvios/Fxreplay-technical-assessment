@@ -103,35 +103,49 @@ function copyValue(variantKey: string, field: (typeof copyFields)[number]['key']
           <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <StatTile
               label="Control CR"
-              value={formatPct(primary.test.control_cr)}
-              hint={`${primary.test.control.conversions} / ${primary.test.control.visitors} visitors`}
+              value={metrics.source === 'posthog' ? formatPct(primary.test.control_cr) : '—'}
+              hint={`${primary.test.control.conversions} signups · ${primary.test.control.visitors} visitors`}
             />
             <StatTile
               label="Variant CR"
-              value={formatPct(primary.test.variant_cr)}
-              hint={`${primary.test.variant.conversions} / ${primary.test.variant.visitors} visitors`}
+              value={metrics.source === 'posthog' ? formatPct(primary.test.variant_cr) : '—'}
+              hint={`${primary.test.variant.conversions} signups · ${primary.test.variant.visitors} visitors`}
             />
             <StatTile
               label="Relative lift"
-              value={formatSignedPct(primary.test.relative_lift_pct)}
-              hint={`p = ${primary.test.p_value === null ? 'n/a' : primary.test.p_value.toFixed(4)}`}
+              value={
+                metrics.source === 'posthog' ? formatSignedPct(primary.test.relative_lift_pct) : '—'
+              }
+              hint={
+                metrics.source === 'posthog'
+                  ? `p = ${primary.test.p_value === null ? 'n/a' : primary.test.p_value.toFixed(4)}`
+                  : 'No exposure data'
+              }
               tone={
-                (primary.test.relative_lift_pct ?? 0) > 0
-                  ? 'positive'
-                  : (primary.test.relative_lift_pct ?? 0) < 0
-                    ? 'negative'
-                    : 'neutral'
+                metrics.source !== 'posthog'
+                  ? 'neutral'
+                  : (primary.test.relative_lift_pct ?? 0) > 0
+                    ? 'positive'
+                    : (primary.test.relative_lift_pct ?? 0) < 0
+                      ? 'negative'
+                      : 'neutral'
               }
             />
             <StatTile
               label="Sample"
               value={
-                primary.test.is_underpowered
-                  ? `${primary.test.remaining_visitors} short`
-                  : 'Powered'
+                metrics.source !== 'posthog'
+                  ? '—'
+                  : primary.test.is_underpowered
+                    ? `${primary.test.remaining_visitors} short`
+                    : 'Powered'
               }
               hint={`Target ${primary.test.sample_target} per arm`}
-              tone={primary.test.is_underpowered ? 'neutral' : 'positive'}
+              tone={
+                metrics.source === 'posthog' && !primary.test.is_underpowered
+                  ? 'positive'
+                  : 'neutral'
+              }
             />
           </div>
 

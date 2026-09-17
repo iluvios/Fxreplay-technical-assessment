@@ -142,6 +142,35 @@ export async function collectMetrics(params: {
     )
   );
 
+  // Two ways the exposure data can be present but unusable, both of which would
+  // otherwise produce a confident 0.00% conversion rate next to a non-zero signup
+  // count — a number that looks like a measurement and is not one.
+  //
+  //   1. No exposures at all: the query succeeded but the events never landed, e.g.
+  //      the tracking snippet is blocked or the experiment has had no traffic.
+  //   2. More conversions than exposures: impossible when both are counted over unique
+  //      visitors, so the exposure side is incomplete.
+  //
+  // Either way the denominator is not real, and the agent must not act on it.
+  if (source === 'posthog') {
+    const totalImpressions = arms.reduce((sum, arm) => sum + arm.visitors, 0);
+    const inverted = arms.some((arm) => arm.signups > arm.visitors);
+
+    if (totalImpressions === 0) {
+      source = 'database';
+      notes.push(
+        'PostHog recorded no exposures for this experiment, so there is no denominator ' +
+          'for a conversion rate. Reporting signup counts only; no automated action.'
+      );
+    } else if (inverted) {
+      source = 'database';
+      notes.push(
+        'Conversions exceed measured exposures on at least one arm, so exposure tracking ' +
+          'is incomplete. Reporting signup counts only; no automated action.'
+      );
+    }
+  }
+
   return {
     experiment,
     source,
