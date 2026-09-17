@@ -62,9 +62,15 @@ const review = copy.reviews[0];
     data-experiment-id={assignment && !assignment.is_preview ? assignment.experiment_id : ''}
     class="relative flex min-h-screen flex-col overflow-hidden"
   >
-    <!-- Same ambient brand glow as the hero, so the funnel feels continuous. -->
+    <!-- Same chart grid and brand glow as the hero, so the funnel feels continuous. -->
     <div
-      class="pointer-events-none absolute left-1/2 top-0 h-[520px] w-[900px] -translate-x-1/2 rounded-full bg-brand/10 blur-[140px]"
+      class="pointer-events-none absolute inset-0 opacity-[0.06] [mask-image:radial-gradient(ellipse_60%_50%_at_20%_0%,#000_30%,transparent_100%)]"
+      style="background-image:linear-gradient(#F6F6F6 1px,transparent 1px),linear-gradient(90deg,#F6F6F6 1px,transparent 1px);background-size:64px 64px"
+      aria-hidden="true"
+    >
+    </div>
+    <div
+      class="pointer-events-none absolute -left-40 -top-40 h-[560px] w-[560px] rounded-full bg-brand/10 blur-[140px]"
       aria-hidden="true"
     >
     </div>
@@ -84,51 +90,65 @@ const review = copy.reviews[0];
     </header>
 
     <main
-      class="relative mx-auto grid w-full max-w-6xl flex-1 gap-12 px-4 py-12 sm:px-6 lg:grid-cols-[1fr_460px] lg:gap-20 lg:py-20"
+      class="relative mx-auto grid w-full max-w-6xl flex-1 gap-12 px-4 py-10 sm:px-6 lg:grid-cols-[minmax(0,1fr)_480px] lg:gap-16 lg:py-16"
     >
       <!-- Value reinforcement: keeps the promise visible while the form is filled in. -->
-      <section class="lg:pt-4">
+      <section class="lg:pt-2">
         <p
-          class="mb-5 inline-block rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-brand-light"
+          class="mb-5 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-brand-light"
         >
+          <span class="relative flex h-1.5 w-1.5" aria-hidden="true">
+            <span
+              class="absolute inline-flex h-full w-full rounded-full bg-brand-light opacity-75 motion-safe:animate-ping"
+            ></span>
+            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-light"></span>
+          </span>
           {copy.eyebrow}
         </p>
 
-        <h1 class="mb-4 font-display text-3xl font-black leading-[1.15] text-ink md:text-[2.75rem]">
+        <h1
+          class="mb-4 text-balance font-display text-3xl font-black leading-[1.08] text-ink md:text-[2.75rem]"
+        >
           {copy.modal.title}
         </h1>
         <p class="mb-10 max-w-md text-base leading-relaxed text-ink-muted">
           {copy.modal.subtitle}
         </p>
 
-        <ul class="mb-10 space-y-5">
+        <!-- Trust rail -->
+        <ul class="mb-10 ml-3 border-l border-line-strong pl-7">
           {
             trustPoints.map((point) => (
-              <li class="flex gap-3.5">
+              <li class="relative pb-6 last:pb-0">
                 <span
-                  class="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-success/40 bg-success/10"
+                  class="absolute -left-10 top-0 flex h-6 w-6 items-center justify-center rounded-md border border-success/40 bg-surface"
                   aria-hidden="true"
                 >
-                  <svg viewBox="0 0 12 12" class="h-2.5 w-2.5 fill-none stroke-success stroke-[2.5]">
+                  <svg viewBox="0 0 12 12" class="h-3 w-3 fill-none stroke-success stroke-[2.5]">
                     <path d="M2 6.2 4.6 8.8 10 3.4" stroke-linecap="round" stroke-linejoin="round" />
                   </svg>
                 </span>
-                <div>
-                  <p class="text-sm font-bold text-ink">{point.title}</p>
-                  <p class="mt-0.5 text-sm leading-relaxed text-ink-subtle">{point.body}</p>
-                </div>
+                <p class="text-sm font-bold text-ink">{point.title}</p>
+                <p class="mt-0.5 text-sm leading-relaxed text-ink-subtle">{point.body}</p>
               </li>
             ))
           }
         </ul>
 
         <!-- Arm-specific reinforcement: the same two pillars the landing page led with. -->
-        <div class="mb-10 grid gap-4 sm:grid-cols-2">
+        <div class="mb-10 grid gap-3 sm:grid-cols-2">
           {
-            reinforcement.map((pillar) => (
-              <div class="rounded-xl border border-line bg-surface-raised/60 p-4">
-                <p class="text-sm font-bold text-ink">{pillar.title}</p>
-                <p class="mt-1.5 text-xs leading-relaxed text-ink-subtle">{pillar.description}</p>
+            reinforcement.map((pillar, i) => (
+              <div class="relative overflow-hidden rounded-xl border border-line bg-surface-raised p-4">
+                <div
+                  class="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-transparent"
+                  aria-hidden="true"
+                />
+                <span class="relative mb-2 block font-mono text-[10px] tracking-[0.18em] text-ink-subtle">
+                  0{i + 1}
+                </span>
+                <p class="relative text-sm font-bold text-ink">{pillar.title}</p>
+                <p class="relative mt-1.5 text-xs leading-relaxed text-ink-subtle">{pillar.description}</p>
               </div>
             ))
           }
@@ -136,16 +156,20 @@ const review = copy.reviews[0];
 
         {
           review && (
-            <figure class="max-w-md border-l-2 border-brand/40 pl-5">
-              <blockquote class="text-sm leading-relaxed text-ink-muted">
-                “{review.quote}”
-              </blockquote>
-              <figcaption class="mt-3 flex items-center gap-2 text-xs">
+            <figure class="relative max-w-md rounded-xl border border-line bg-surface-raised/60 p-5 pt-6">
+              <span
+                class="absolute -top-3 left-4 font-display text-4xl font-black leading-none text-brand-light"
+                aria-hidden="true"
+              >
+                “
+              </span>
+              <blockquote class="text-sm leading-relaxed text-ink-muted">{review.quote}</blockquote>
+              <figcaption class="mt-4 flex flex-wrap items-center gap-2 border-t border-line pt-4 text-xs">
                 <span class="font-bold text-ink">{review.name}</span>
                 <span class="text-ink-subtle">·</span>
                 <span class="text-ink-subtle">{review.role}</span>
                 {review.verified && (
-                  <span class="rounded bg-success/10 px-1.5 py-0.5 font-mono text-[10px] text-success">
+                  <span class="ml-auto rounded border border-success/30 bg-success/10 px-1.5 py-0.5 font-mono text-[10px] text-success">
                     {review.credential}
                   </span>
                 )}
@@ -155,7 +179,7 @@ const review = copy.reviews[0];
         }
       </section>
 
-      <section class="lg:pt-4">
+      <section class="lg:sticky lg:top-8 lg:self-start">
         <SignupForm
           client:load
           lp={lp}

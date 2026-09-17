@@ -47,6 +47,8 @@ const FONT_HREF =
     <!-- Fonts: preconnect + preload the stylesheet so text paints without FOIT -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Logo and hero product mockup are served from the Webflow CDN; open the socket early. -->
+    <link rel="preconnect" href="https://cdn.prod.website-files.com" />
     <link rel="preload" as="style" href={FONT_HREF} />
     <link rel="stylesheet" href={FONT_HREF} media="print" onload="this.media='all'" />
     <noscript><link rel="stylesheet" href={FONT_HREF} /></noscript>

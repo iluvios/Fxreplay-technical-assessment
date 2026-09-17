@@ -511,15 +511,19 @@ proper error messaging.
 
 ---
 
-## 8. What I left out, and why
+## 8. Strategic trade-offs and deliberate cuts
 
-- **Passwords are plain text.** Deliberate for a simulated signup, flagged in the schema.
-- **Admin login is a hardcoded password.** A real deployment would put this behind company
-  SSO; building half a login system would be effort spent on the one part guaranteed to be
-  thrown away.
-- **Scroll depth and time-on-page aren't collected.** The database has columns for them
-  and the design references them, but nothing populates them yet. I'd rather say that than
-  show an empty chart implying otherwise.
+### What I prioritized, and why
+
+- **Architecture over design complexity:** I deliberately didn't build an overly intricate or novel visual design. If an existing design works, the engineering priority is to systematically measure and improve it. Locking down a clean, consistent layout avoided confounding visual variables and kept the focus where growth leverage actually lies: robust technical architecture that isolates copy performance.
+- **Fast ICP experimentation at scale:** I believe hyper-personalized messaging tailored to specific customer profiles is what truly moves conversion numbers. I prioritized the technical foundation that makes testing those messages fast, reliable, and scalable — zero-CLS server-side routing, first-party telemetry that bypasses ad blockers, and an autonomous evaluation loop.
+- **Copywriting calibration vs. domain mastery:** Not being an active FX/futures trader myself, I recognized that my domain intuition wouldn't match a ten-year veteran out of the gate. Rather than relying on generic SaaS buzzwords, I focused on researching authentic retail trader mechanics (trailing drawdown on unrealised equity, intrabar tick skipping, session time constraints) to achieve a solid, credible baseline, while structuring the copy dictionary so domain experts and copywriters can iterate instantly without code changes.
+
+### What was deliberately left out or simplified
+
+- **Passwords are plain text.** Deliberate for a simulated signup challenge, explicitly flagged in the schema.
+- **Admin login is a hardcoded password.** A real deployment would put this behind company SSO; building half a login system would be effort spent on the one part guaranteed to be thrown away.
+- **Scroll depth and time-on-page aren't collected.** The database has columns for them and the design references them, but nothing populates them yet. I'd rather say that than show an empty chart implying otherwise.
 
 ---
 

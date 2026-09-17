@@ -5,7 +5,13 @@
 //
 // Structure is identical for every arm. Only the words differ — that is what makes a
 // win attributable to the message rather than to the layout it happened to arrive in.
-import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+//
+// Layout: message on the left, a framed product surface on the right (lg+), and a market
+// tape underneath. The product surface is the experiment's fourth hero variable
+// (docs/EXPERIMENT_VARIANTS_COPY.md "Hero Visual") — it lives on the ICP base, so every arm
+// of one experiment shows the same one.
+import type { ExperimentVariantCopy, HeroVariables } from '../lib/copy-dictionary';
+import { HERO_VISUAL_BY_TYPE } from '../lib/copy-dictionary';
 
 interface Props {
   copy: ExperimentVariantCopy;
@@ -32,109 +38,294 @@ const headlinePayoff = breakAt === -1 ? null : hero.headline.slice(breakAt + 2);
 // Objection handling, one line, at the moment of highest intent. Fixed for every arm.
 const assurances = ['No credit card', 'Free plan, forever', '70,000+ traders'];
 
-// Real product coverage, not simulated market data — nothing here is fabricated.
-const coverage = ['FOREX', 'FUTURES', 'INDICES', 'STOCKS', 'CRYPTO'];
+// Window title for the product surface — the mockup names from docs/IMAGE_ASSETS_CATALOG.md §3.
+const WINDOW_LABEL: Record<HeroVariables['hero_image_type'], string> = {
+  standard_chart: 'Replay mode',
+  prop_firm_overlay: 'Prop firm simulator',
+  time_compression: 'Seconds timeframes',
+  multi_timeframe: 'Multipair & multichart',
+};
+
+const visualSrc = HERO_VISUAL_BY_TYPE[hero.hero_image_type];
+const visualLabel = WINDOW_LABEL[hero.hero_image_type];
+
+// The mockups are exported at 428×388. Fixed dimensions + a matching aspect-ratio box on
+// the frame mean the layout is settled before the SVG arrives.
+const VISUAL_W = 428;
+const VISUAL_H = 388;
+
+// The mockups weigh 150–490 KB. Below lg the window is not rendered, so viewports under
+// 1024px are served this 1×1 transparent GIF instead and never download the SVG.
+const BLANK_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+
+// One product fact floated over the frame. The first pillar is held constant per ICP.
+const floatingFact = copy.pillars[0]?.title;
+
+// Market tape: the same coverage facts AssetCoverage.astro renders, plus the tickers the
+// asset catalogue lists (docs/IMAGE_ASSETS_CATALOG.md §6). Nothing here is simulated.
+type TapeItem =
+  | { kind: 'class'; label: string }
+  | { kind: 'symbol'; symbol: string; since?: string };
+
+const TAPE: TapeItem[] = [
+  { kind: 'class', label: 'Forex' },
+  { kind: 'symbol', symbol: 'EURUSD', since: '2005' },
+  { kind: 'symbol', symbol: 'USDCHF', since: '2005' },
+  { kind: 'class', label: 'Indices' },
+  { kind: 'symbol', symbol: 'DXY', since: '2007' },
+  { kind: 'symbol', symbol: 'SPX500', since: '2008' },
+  { kind: 'symbol', symbol: 'NAS100', since: '2008' },
+  { kind: 'symbol', symbol: 'US30', since: '2010' },
+  { kind: 'class', label: 'Futures' },
+  { kind: 'symbol', symbol: 'MGC' },
+  { kind: 'class', label: 'Stocks' },
+  { kind: 'symbol', symbol: 'AAPL' },
+  { kind: 'symbol', symbol: 'TSLA' },
+  { kind: 'class', label: 'Crypto' },
+  { kind: 'symbol', symbol: 'BNBUSDT' },
+  { kind: 'symbol', symbol: 'ETHUSDT' },
+];
 ---
 
 <section class="relative overflow-hidden">
-  <!-- Ambient brand glow behind the headline -->
-  <div
-    class="pointer-events-none absolute left-1/2 top-0 h-[420px] w-[820px] -translate-x-1/2 rounded-full bg-brand/10 blur-[120px]"
-    aria-hidden="true"
-  >
-  </div>
-
   <!--
     Faint chart grid, masked to fade out before it reaches the text. Pure CSS gradients:
     no image request, no layout cost, and it reads as a trading surface rather than a
     generic marketing page.
   -->
   <div
-    class="pointer-events-none absolute inset-0 opacity-[0.07] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_40%,transparent_100%)]"
-    style="background-image:linear-gradient(#F6F6F6_1px,transparent_1px),linear-gradient(90deg,#F6F6F6_1px,transparent_1px);background-size:64px_64px"
+    class="pointer-events-none absolute inset-0 opacity-[0.07] [mask-image:radial-gradient(ellipse_70%_60%_at_30%_0%,#000_30%,transparent_100%)]"
+    style="background-image:linear-gradient(#F6F6F6 1px,transparent 1px),linear-gradient(90deg,#F6F6F6 1px,transparent 1px);background-size:64px 64px"
     aria-hidden="true"
   >
   </div>
 
-  <div class="relative mx-auto max-w-[1000px] px-4 pb-12 pt-24 text-center sm:px-6">
-    <p
-      class="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-light"
-    >
-      <span class="h-1.5 w-1.5 rounded-full bg-brand-light" aria-hidden="true"></span>
-      {eyebrow}
-    </p>
+  <div class="relative mx-auto max-w-7xl px-4 pb-14 pt-16 sm:px-6 lg:px-8 lg:pb-20 lg:pt-20">
+    <div class="grid items-center gap-12 lg:grid-cols-[minmax(0,11fr)_minmax(0,9fr)] lg:gap-16">
+      <!-- Message -->
+      <div class="text-center lg:text-left">
+        <p
+          class="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-light"
+        >
+          <span class="relative flex h-1.5 w-1.5" aria-hidden="true">
+            <span
+              class="absolute inline-flex h-full w-full rounded-full bg-brand-light opacity-75 motion-safe:animate-ping"
+            ></span>
+            <span class="relative inline-flex h-1.5 w-1.5 rounded-full bg-brand-light"></span>
+          </span>
+          {eyebrow}
+        </p>
 
-    <h1 class="mb-6 font-display text-4xl font-black leading-[1.12] text-ink md:text-6xl">
-      {headlineLead}{
-        headlinePayoff && (
-          <>
-            {' '}
-            <span class="text-brand-light">{headlinePayoff}</span>
-          </>
-        )
-      }
-    </h1>
+        <h1
+          class="mb-6 text-balance font-display text-4xl font-black leading-[1.06] text-ink sm:text-5xl lg:text-[3.5rem] xl:text-6xl"
+        >
+          {headlineLead}{
+            headlinePayoff && (
+              <>
+                {' '}
+                <span class="text-brand-light">{headlinePayoff}</span>
+              </>
+            )
+          }
+        </h1>
 
-    <p class="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-ink-muted md:text-xl">
-      {hero.subheadline}
-    </p>
+        <p class="mx-auto mb-8 max-w-xl text-lg leading-relaxed text-ink-muted md:text-xl lg:mx-0">
+          {hero.subheadline}
+        </p>
 
-    <div class="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
-      <a
-        href={ctaHref}
-        data-analytics-cta="hero"
-        class="inline-block w-full rounded-full bg-brand px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-brand/25 transition-colors hover:bg-brand-hover sm:w-auto"
-      >
-        {hero.cta_text}
-      </a>
-
-      <!-- Secondary path for visitors who want proof before a form. Anchors to the
-           interactive simulator already on the page, so it costs nothing to offer. -->
-      <a
-        href="#simulator"
-        data-analytics-cta="hero_secondary"
-        class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-line-strong px-6 py-3.5 text-base font-semibold text-ink-muted transition-colors hover:border-line-strongest hover:text-ink sm:w-auto"
-      >
-        Try the replay first
-        <span aria-hidden="true">↓</span>
-      </a>
-    </div>
-
-    <p class="mt-4 text-sm text-ink-subtle">{hero.cta_subtext}</p>
-
-    <ul class="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
-      {
-        assurances.map((item) => (
-          <li class="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ink-subtle">
-            <svg
-              viewBox="0 0 12 12"
-              class="h-3 w-3 shrink-0 fill-none stroke-success stroke-[2]"
-              aria-hidden="true"
-            >
-              <path d="M2 6.2 4.6 8.8 10 3.4" stroke-linecap="round" stroke-linejoin="round" />
+        <div class="flex flex-col items-center gap-3 sm:flex-row sm:justify-center sm:gap-4 lg:justify-start">
+          <a
+            href={ctaHref}
+            data-analytics-cta="hero"
+            class="inline-flex w-full items-center justify-center gap-2.5 rounded-full bg-brand px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-brand/25 transition-colors hover:bg-brand-hover sm:w-auto"
+          >
+            <svg viewBox="0 0 12 12" class="h-3 w-3 shrink-0 fill-current" aria-hidden="true">
+              <path d="M2.5 1.2v9.6L10.5 6z" />
             </svg>
-            {item}
-          </li>
-        ))
-      }
-    </ul>
+            {hero.cta_text}
+          </a>
+
+          <!-- Secondary path for visitors who want proof before a form. Anchors to the
+               interactive simulator already on the page, so it costs nothing to offer. -->
+          <a
+            href="#simulator"
+            data-analytics-cta="hero_secondary"
+            class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-line-strong px-6 py-3.5 text-base font-semibold text-ink-muted transition-colors hover:border-line-strongest hover:text-ink sm:w-auto"
+          >
+            Try the replay first
+            <span aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <p class="mt-4 text-sm text-ink-subtle">{hero.cta_subtext}</p>
+
+        <ul
+          class="mt-8 flex flex-wrap items-center justify-center divide-x divide-line-strong lg:justify-start"
+        >
+          {
+            assurances.map((item) => (
+              <li class="flex items-center gap-2 px-4 font-mono text-[11px] uppercase tracking-wider text-ink-subtle first:pl-0 last:pr-0">
+                <svg
+                  viewBox="0 0 12 12"
+                  class="h-3 w-3 shrink-0 fill-none stroke-success stroke-[2]"
+                  aria-hidden="true"
+                >
+                  <path d="M2 6.2 4.6 8.8 10 3.4" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+                {item}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <!-- Product surface (lg+). Framed like a window so it reads as the tool, not a poster. -->
+      <div class="relative hidden lg:block">
+        <div
+          class="pointer-events-none absolute -inset-8 rounded-[2.5rem] bg-brand/15 blur-3xl"
+          aria-hidden="true"
+        >
+        </div>
+
+        <div
+          class="relative overflow-hidden rounded-2xl border border-line-strong bg-surface-raised shadow-2xl shadow-black/60"
+        >
+          <div
+            class="pointer-events-none absolute inset-0 bg-gradient-to-br from-brand/10 via-transparent to-transparent"
+            aria-hidden="true"
+          >
+          </div>
+
+          <!-- Window chrome -->
+          <div class="relative flex items-center justify-between border-b border-line px-4 py-2.5">
+            <div class="flex items-center gap-3">
+              <span class="flex gap-1.5" aria-hidden="true">
+                <span class="h-2.5 w-2.5 rounded-full bg-line-strongest"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-line-strongest"></span>
+                <span class="h-2.5 w-2.5 rounded-full bg-line-strongest"></span>
+              </span>
+              <span class="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-ink-subtle">
+                FX Replay <span class="text-line-strongest">/</span> {visualLabel}
+              </span>
+            </div>
+            <span
+              class="inline-flex items-center gap-1.5 rounded-full border border-success/30 bg-success/10 px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.16em] text-success"
+            >
+              <span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true"></span>
+              Replay
+            </span>
+          </div>
+
+          <div class="relative aspect-[428/388] bg-surface">
+            <picture>
+              <source media="(max-width: 1023px)" srcset={BLANK_PIXEL} />
+              <img
+                src={visualSrc}
+                alt={`${visualLabel} — FX Replay`}
+                width={VISUAL_W}
+                height={VISUAL_H}
+                loading="eager"
+                fetchpriority="high"
+                decoding="async"
+                class="block h-full w-full object-cover"
+              />
+            </picture>
+            <!-- Replay head: a thin brand line sweeping the width, the product's core mechanic. -->
+            <div class="hero-progress absolute bottom-0 left-0 h-0.5 bg-brand" aria-hidden="true"></div>
+          </div>
+        </div>
+
+        {
+          floatingFact && (
+            <div class="absolute -bottom-4 left-6 flex items-center gap-2 rounded-lg border border-line-strong bg-surface px-3 py-2 text-xs font-semibold text-ink shadow-xl shadow-black/50">
+              <span class="h-1.5 w-1.5 rounded-full bg-success" aria-hidden="true" />
+              {floatingFact}
+            </div>
+          )
+        }
+      </div>
+    </div>
   </div>
 
-  <!-- Asset coverage band. Product fact, styled like a terminal readout. -->
+  <!-- Market tape. Product fact, styled like a terminal readout; pauses on hover. -->
   <div class="relative border-y border-line/60 bg-surface-raised/40">
-    <ul
-      class="mx-auto flex max-w-[1000px] flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 py-3.5 sm:px-6"
-    >
-      {
-        coverage.map((asset) => (
-          <li class="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-ink-subtle">
-            {asset}
-          </li>
-        ))
-      }
-      <li class="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-brand-light">
+    <div class="mx-auto flex max-w-7xl items-stretch px-4 sm:px-6 lg:px-8">
+      <p
+        class="flex shrink-0 items-center gap-2 border-r border-line py-3 pr-4 font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-brand-light"
+      >
+        <span class="h-1.5 w-1.5 rounded-full bg-brand-light" aria-hidden="true"></span>
         Replayable 24/7
-      </li>
-    </ul>
+      </p>
+
+      <div
+        class="hero-tape-viewport relative min-w-0 flex-1 overflow-hidden [mask-image:linear-gradient(90deg,transparent,#000_6%,#000_94%,transparent)]"
+      >
+        <div class="hero-tape flex w-max">
+          {
+            [0, 1].map((pass) => (
+              <ul
+                class="flex items-center gap-x-7 py-3 pl-6 pr-7"
+                aria-label={pass === 0 ? 'Markets available to replay' : undefined}
+                aria-hidden={pass === 1 ? 'true' : undefined}
+              >
+                {TAPE.map((item) =>
+                  item.kind === 'class' ? (
+                    <li class="whitespace-nowrap rounded border border-line-strong px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.18em] text-ink-subtle">
+                      {item.label}
+                    </li>
+                  ) : (
+                    <li class="flex items-center gap-1.5 whitespace-nowrap font-mono text-xs">
+                      <span class="font-medium text-ink">{item.symbol}</span>
+                      {item.since && <span class="text-ink-subtle">since {item.since}</span>}
+                    </li>
+                  )
+                )}
+              </ul>
+            ))
+          }
+        </div>
+      </div>
+    </div>
   </div>
 </section>
+
+<style>
+  /* Replay head sweeps the frame; the tape drifts left and loops on its duplicate half. */
+  .hero-progress {
+    width: 0;
+    animation: hero-progress 14s linear infinite;
+  }
+
+  .hero-tape {
+    animation: hero-tape 60s linear infinite;
+  }
+
+  .hero-tape-viewport:hover .hero-tape {
+    animation-play-state: paused;
+  }
+
+  @keyframes hero-progress {
+    from {
+      width: 0;
+    }
+    to {
+      width: 100%;
+    }
+  }
+
+  @keyframes hero-tape {
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .hero-progress {
+      width: 100%;
+      animation: none;
+    }
+    .hero-tape {
+      animation: none;
+    }
+  }
+</style>
