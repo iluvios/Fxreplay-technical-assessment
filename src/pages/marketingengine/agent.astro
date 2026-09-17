@@ -85,7 +85,7 @@ const dependencies = [
 
 <AdminShell
   title="Evaluation agent"
-  subtitle="Runs twice daily at 08:00 and 20:00 UTC, or on demand."
+  subtitle="Runs on the schedule in vercel.json (currently 08:00 UTC daily), or on demand."
   active="agent"
 >
   <div class="mb-8 flex flex-wrap items-center gap-3">
@@ -203,7 +203,7 @@ const dependencies = [
     {
       decisions.length === 0 ? (
         <p class="rounded-xl border border-line bg-surface-raised p-5 text-sm text-ink-subtle">
-          No runs recorded yet. Trigger one above, or wait for the 08:00 UTC pass.
+          No runs recorded yet. Trigger one above, or wait for the next scheduled pass.
         </p>
       ) : (
         <ul class="space-y-2">

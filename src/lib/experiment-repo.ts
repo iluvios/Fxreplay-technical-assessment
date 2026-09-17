@@ -883,7 +883,17 @@ export const experimentDb: ExperimentRepository = createRepository();
  */
 const REGISTRY_TTL_MS = 30_000;
 
-let registryCache: { registry: Record<string, Experiment>; expiresAt: number } | null = null;
+interface RuntimeRegistry {
+  /** Experiments still splitting traffic. */
+  registry: Record<string, Experiment>;
+  /**
+   * Concluded experiments whose winning arm now serves all of that entry point's
+   * traffic, keyed by experiment id, valued by the winning `variant_key`.
+   */
+  promoted: Record<string, string>;
+}
+
+let registryCache: { value: RuntimeRegistry; expiresAt: number } | null = null;
 
 /** Invalidate immediately after a write, so the admin sees its own change reflected. */
 export function invalidateRegistryCache(): void {
@@ -927,30 +937,46 @@ function toRuntimeExperiment(record: ExperimentWithVariants): Experiment | null 
   };
 }
 
-async function loadRegistry(): Promise<Record<string, Experiment>> {
+async function loadRegistry(): Promise<RuntimeRegistry> {
   const now = Date.now();
-  if (registryCache && registryCache.expiresAt > now) return registryCache.registry;
+  if (registryCache && registryCache.expiresAt > now) return registryCache.value;
 
   try {
     const records = await experimentDb.list();
     const registry: Record<string, Experiment> = {};
+    const promoted: Record<string, string> = {};
 
     for (const record of records) {
+      // A promoted experiment has stopped splitting traffic, but its winning copy is
+      // the whole point of having run it — that entry point keeps serving the winner
+      // rather than silently reverting to the copy the test just beat.
+      if (record.status === 'winner_promoted') {
+        const winner =
+          record.variants.find((variant) => variant.id === record.winning_variant_id) ??
+          record.variants.find((variant) => variant.active);
+        if (winner) promoted[record.id] = winner.variant_key;
+        continue;
+      }
+
       const runtime = toRuntimeExperiment(record);
       if (runtime) registry[record.id] = runtime;
     }
 
     // An empty table means the migration has not run yet, not that every experiment was
     // deliberately deleted — serving the static registry is the safer reading.
-    const resolved = Object.keys(registry).length > 0 ? registry : EXPERIMENTS;
-    registryCache = { registry: resolved, expiresAt: now + REGISTRY_TTL_MS };
-    return resolved;
+    const value: RuntimeRegistry =
+      Object.keys(registry).length > 0 || Object.keys(promoted).length > 0
+        ? { registry, promoted }
+        : { registry: EXPERIMENTS, promoted: {} };
+
+    registryCache = { value, expiresAt: now + REGISTRY_TTL_MS };
+    return value;
   } catch (error) {
     console.error(
       '[experiment-repo] registry load failed, serving static registry:',
       error instanceof Error ? error.message : error
     );
-    return EXPERIMENTS;
+    return { registry: EXPERIMENTS, promoted: {} };
   }
 }
 
@@ -973,7 +999,16 @@ export async function resolveLiveExperience(params: {
 
   if (!lp) return { copy: COPY_DICTIONARY.control, assignment: null };
 
-  const registry = await loadRegistry();
+  const { registry, promoted } = await loadRegistry();
+
+  // Concluded with a winner: serve the winning copy, but return no assignment. The test
+  // is over, so this traffic must not emit exposure events or be attributed to an arm —
+  // counting post-decision conversions into the result would bias it toward the winner.
+  const promotedKey = promoted[lp];
+  if (promotedKey) {
+    return { copy: copyFor(promotedKey), assignment: null };
+  }
+
   const experiment = registry[lp];
 
   if (!experiment || experiment.status !== 'running') {

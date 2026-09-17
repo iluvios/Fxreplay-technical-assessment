@@ -131,7 +131,15 @@ export function evaluateTest(params: {
   const controlCr = conversionRate(control);
   const variantCr = conversionRate(variant);
 
-  const baselineForPlanning = params.baselineCr ?? (controlCr > 0 ? controlCr : DEFAULT_BASELINE_CR);
+  // A zero or missing baseline is not a plan, it is an absence of one. Falling through
+  // to the observed control rate, then to the product default, keeps the sample target
+  // meaningful instead of letting it collapse toward zero.
+  const baselineForPlanning =
+    params.baselineCr && params.baselineCr > 0
+      ? params.baselineCr
+      : controlCr > 0
+        ? controlCr
+        : DEFAULT_BASELINE_CR;
   const sampleTarget = requiredSampleSize(baselineForPlanning, params.mde);
 
   const minVisitors = Math.min(control.visitors, variant.visitors);

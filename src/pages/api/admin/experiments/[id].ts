@@ -21,7 +21,7 @@ async function applyUpdate(parsed: ParsedRequest, id: string) {
   // before validation is what makes one form able to edit any subset of fields.
   const fields = Object.fromEntries(
     Object.entries(parsed.fields).filter(
-      ([key, value]) => value !== '' && !['_method', 'action', 'variant_id'].includes(key)
+      ([key, value]) => value !== '' && !['_method', 'op', 'variant_id'].includes(key)
     )
   );
 
@@ -104,13 +104,20 @@ async function applyPromote(parsed: ParsedRequest, id: string) {
   );
 }
 
-/** POST /api/admin/experiments/:id — form entry point; `_method` / `action` selects the operation. */
+/**
+ * POST /api/admin/experiments/:id — form entry point; `_method` / `op` selects the
+ * operation.
+ *
+ * The selector is named `op` rather than `action` on purpose: a form control named
+ * `action` shadows `form.action` in the DOM, so any script that later reads the form's
+ * target gets an input element back instead of a URL.
+ */
 export const POST: APIRoute = async ({ request, params }) => {
   const parsed = await parseRequest(request);
   const id = params.id!;
 
   if (parsed.fields._method === 'delete') return applyDelete(parsed, id);
-  if (parsed.fields.action === 'promote') return applyPromote(parsed, id);
+  if (parsed.fields.op === 'promote') return applyPromote(parsed, id);
   return applyUpdate(parsed, id);
 };
 

@@ -261,7 +261,7 @@ function copyValue(variantKey: string, field: (typeof copyFields)[number]['key']
                     <div class="flex justify-end gap-2">
                       {!variant.is_control && variant.active && (
                         <form method="post" action={`/api/admin/experiments/${experiment.id}`}>
-                          <input type="hidden" name="action" value="promote" />
+                          <input type="hidden" name="op" value="promote" />
                           <input type="hidden" name="variant_id" value={variant.id} />
                           <button
                             type="submit"

@@ -70,7 +70,9 @@ export const POST: APIRoute = async ({ request }) => {
       },
       ...treatmentKeys.map((key) => ({
         variant_key: key,
-        variant_name: COPY_DICTIONARY[key].hero.headline.slice(0, 100),
+        // The eyebrow names the angle being tested ("TIME COMPRESSION REPLAY ENGINE"),
+        // which reads better in a table than the full headline it introduces.
+        variant_name: `Variant ${key} — ${COPY_DICTIONARY[key].eyebrow.toLowerCase()}`.slice(0, 100),
         is_control: false,
         weight,
         active: true,

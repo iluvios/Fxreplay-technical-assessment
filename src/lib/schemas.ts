@@ -106,10 +106,21 @@ const ExperimentIdSchema = z
   .max(50, 'Experiment id is too long')
   .regex(/^[a-z0-9][a-z0-9_-]*$/i, 'Use letters, numbers, hyphens or underscores only');
 
-const PercentSchema = z.coerce
-  .number()
-  .min(0, 'Must be 0 or more')
-  .max(100, 'Must be 100 or less');
+/**
+ * An optional percentage field.
+ *
+ * The preprocess step is load-bearing: an untouched number input posts as `""`, and
+ * `z.coerce.number()` turns `""` into `0` rather than rejecting it. A baseline CR of 0
+ * silently poisons every downstream calculation — it makes the required sample size
+ * collapse to a handful of visitors, which would let the agent declare significance on
+ * noise. Empty must mean absent, not zero.
+ */
+const OptionalPercentSchema = z
+  .preprocess(
+    (value) => (value === '' || value === null || value === undefined ? null : value),
+    z.coerce.number().min(0, 'Must be 0 or more').max(100, 'Must be 100 or less').nullable()
+  )
+  .default(null);
 
 export const CreateExperimentSchema = z.object({
   id: ExperimentIdSchema,
@@ -123,8 +134,8 @@ export const CreateExperimentSchema = z.object({
     .transform((value) => (value ? value : null)),
   status: ExperimentStatusSchema.default('draft'),
   primary_metric: z.string().trim().min(1).max(100).default('signup_completed'),
-  baseline_cr: PercentSchema.nullable().optional().default(null),
-  target_cr: PercentSchema.nullable().optional().default(null),
+  baseline_cr: OptionalPercentSchema,
+  target_cr: OptionalPercentSchema,
   /** Comma-separated COPY_DICTIONARY keys for the non-control arms, e.g. "2,3". */
   variant_keys: z.string().trim().default(''),
 });
@@ -136,8 +147,8 @@ export const UpdateExperimentSchema = z
     icp_id: z.string().trim().max(50).optional(),
     status: ExperimentStatusSchema.optional(),
     primary_metric: z.string().trim().min(1).max(100).optional(),
-    baseline_cr: PercentSchema.nullable().optional(),
-    target_cr: PercentSchema.nullable().optional(),
+    baseline_cr: OptionalPercentSchema.optional(),
+    target_cr: OptionalPercentSchema.optional(),
   })
   .refine((data) => Object.values(data).some((value) => value !== undefined), {
     message: 'Provide at least one field to update',
