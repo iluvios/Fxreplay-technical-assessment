@@ -10,7 +10,8 @@
     "astro": "astro",
     "db:migrate": "node scripts/db.mjs migrate",
     "db:status": "node scripts/db.mjs status",
-    "db:report": "node scripts/db.mjs report"
+    "db:report": "node scripts/db.mjs report",
+    "eval-test": "node scripts/evaluate.mjs"
   },
   "dependencies": {
     "@astrojs/react": "^4.2.1",
