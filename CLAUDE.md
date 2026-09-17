@@ -17,7 +17,7 @@ Do not invent copy, do not design new layouts, do not write documentation, and d
    - Create `src/pages/signup.astro` containing the registration form (`name`, `email`, `password`, `icp_focus`) posting to `/api/users`.
 2. **Framework & Islands Discipline (Astro 5 + Tailwind + React):**
    - Marketing content, navigation, feature tabs, and asset tables must be **100% static `.astro` components (0 KB client JavaScript)** to preserve sub-second LCP.
-   - The only React island is `src/components/ChartSimulator.tsx` (`client:visible` using `lightweight-charts`).
+   - The only React island is `src/components/ChartSimulator.tsx` (`client:idle` using `lightweight-charts`).
 3. **Zero Cumulative Layout Shift (CLS = 0.00):**
    - On `src/pages/freetrial.astro` (and `index.astro`), read `Astro.url.searchParams.get('lp')` on the server to inject the pre-written copy before HTML delivery. Never swap text client-side.
 4. **Lean Analytics:**

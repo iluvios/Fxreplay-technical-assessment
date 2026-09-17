@@ -33,7 +33,7 @@ In growth engineering, performance directly governs conversion rate and ad spend
 
 ### C. Interaction to Next Paint (INP)
 * **The Problem:** Full-page React SPAs (Next.js) hydrate the entire document tree, locking the main browser thread.
-* **The Solution:** Astro’s **Islands Architecture** leaves 85% of the DOM completely inert. Client-side hydration is restricted to a single island, `<ChartSimulator client:visible />`, keeping the main thread free for instantaneous click responses. The feature tabs switch via a pure CSS radio-input pattern with 0 KB of JavaScript.
+* **The Solution:** Astro’s **Islands Architecture** leaves 85% of the DOM completely inert. Client-side hydration is restricted to a single island, `<ChartSimulator client:idle />`, keeping the main thread free for instantaneous click responses while loading only when the browser is idle. The feature tabs switch via a pure CSS radio-input pattern with 0 KB of JavaScript.
 
 ---
 
@@ -43,9 +43,7 @@ In growth engineering, performance directly governs conversion rate and ad spend
                                 [Global User Request]
                                           │
                                           ▼
-                      ┌───────────────────────────────────────┐
-                      │      Vercel Global Anycast Edge       │
-                      └───────────────────┬───────────────────┘
+                                   [Vercel Edge CDN]
                                           │
               ┌───────────────────────────┴───────────────────────────┐
               │                                                       │
@@ -54,15 +52,15 @@ In growth engineering, performance directly governs conversion rate and ad spend
 │     Edge Static Cache     │                   │   Serverless Edge SSR     │
 ├───────────────────────────┤                   ├───────────────────────────┤
 │ • CSS Chunks & Fonts      │                   │ • /freetrial?lp=X         │
-│ • SVG Logos & Icons       │                   │ • Injects copy in <15ms   │
-│ • max-age=31536000        │                   │ • Edge-cached via S-SWR   │
+│ • SVG Logos & Icons       │                   │ • Injects copy in <20ms   │
+│ • max-age=31536000        │                   │ • private, no-store       │
 └───────────────────────────┘                   └───────────────────────────┘
 ```
 
-* **Dynamic Edge SSR with Stale-While-Revalidate:**
-  * Route `/freetrial` uses header:  
-    `Cache-Control: public, s-maxage=60, stale-while-revalidate=300`
-  * Vercel caches the pre-rendered response for that specific `?lp=` combination at the edge location closest to the user, delivering **sub-30ms global response times**.
+* **Dynamic Server-Side Rendering (Private, No-Store):**
+  * Route `/freetrial` explicitly sets:  
+    `Cache-Control: private, no-store`
+  * **Why Shared Caching is Prohibited:** A shared edge cache would pin all subsequent visitors to whichever experiment arm rendered first, silently collapsing the randomized A/B traffic distribution. By keeping rendering server-side with `private, no-store`, Vercel Serverless functions resolve each visitor's sticky cookie and query parameters in <20ms while strictly maintaining randomized experimental integrity.
 * **Asset Optimization:**
   * Vector graphics (`FXReplayLogo.svg`, isotype SVGs) are inlined or served directly via SVG, eliminating multi-megabyte PNG downloads.
   * Charts use HTML5 Canvas via `lightweight-charts` (~45 KB total bundle) instead of heavy DOM nodes.

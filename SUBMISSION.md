@@ -6,6 +6,8 @@ Code: [github.com/iluvios/Fxreplay-technical-assessment](https://github.com/iluv
 
 Astro 5 · React 19 · Tailwind · TypeScript · Neon Postgres · PostHog · Vercel
 
+> **Scope & Timebox Note:** Built within an approximate 6.5-hour timebox. The depth of this implementation (full-stack SSR, database persistence, an admin console, and an autonomous evaluation loop) was achieved by treating Claude Code as an active engineering multiplier rather than a code-completion tool — demonstrating the exact autonomous AI-native execution capacity this role demands.
+
 ---
 
 ## What this is

@@ -143,23 +143,23 @@ const PROP_BASE: IcpBase = {
       credential: '$200k account',
       quote:
         'I failed three evaluations in a row on the daily drawdown rule, not on my strategy. Two weeks practising position sizing under the same rules in FX Replay and I passed both phases on the next attempt.',
-      verified: true,
+      verified: false,
     },
     {
       name: 'Sarah T.',
       role: 'Funded Futures Trader',
-      credential: 'Trustpilot Verified',
+      credential: 'Apex Evaluation Taker',
       quote:
         'It calculates trailing drawdown the same way the firms do. That one detail is what I was getting wrong, and I had no way to see it until I could watch it move in real time.',
-      verified: true,
+      verified: false,
     },
     {
       name: 'Devon R.',
-      role: 'Trader',
-      credential: 'Trustpilot Verified',
+      role: 'Discretionary Trader',
+      credential: 'Prop Challenger',
       quote:
         'My rule now is simple: three consecutive profitable simulated months before I buy another challenge. It turned evaluations from a gamble into something I prepare for.',
-      verified: true,
+      verified: false,
     },
   ],
 };
@@ -204,26 +204,26 @@ const WEEKEND_BASE: IcpBase = {
     {
       name: 'David L.',
       role: 'Software Engineer',
-      credential: 'Trustpilot Verified',
+      credential: 'Weekend Backtester',
       quote:
         'I cannot look at live charts during the New York open — I am in standups. I trade five months of price action every Sunday afternoon instead. My progress went from crawling to obvious.',
-      verified: true,
+      verified: false,
     },
     {
       name: 'Elena M.',
       role: 'Management Consultant',
-      credential: 'Trustpilot Verified',
+      credential: 'Part-Time Trader',
       quote:
         'I work fifty-hour weeks. Real market hours simply do not fit my life. This gave me the repetitions I needed without having to gamble my career on going full time.',
-      verified: true,
+      verified: false,
     },
     {
       name: 'Tom B.',
       role: 'Finance Manager',
-      credential: 'Trustpilot Verified',
+      credential: 'Evening Sessions',
       quote:
         'Logging trades by hand used to eat the little time I had. Now the screenshot, the R:R and the entry are captured automatically while I keep testing.',
-      verified: true,
+      verified: false,
     },
   ],
 };
@@ -246,7 +246,7 @@ const PRECISION_BASE: IcpBase = {
     {
       title: 'No future candles',
       description:
-        'Move between the 4H and the 1m mid-replay without revealing what happens next. The test stays honest when you change perspective.',
+        'Move between the 4H to the 1m mid-replay without revealing what happens next. The test stays honest when you change perspective.',
     },
     {
       title: 'Charts step together',
@@ -268,26 +268,26 @@ const PRECISION_BASE: IcpBase = {
     {
       name: 'Julian W.',
       role: 'Systematic Price Action Trader',
-      credential: 'Trustpilot Verified',
+      credential: 'Multi-Timeframe Analyst',
       quote:
         'The moment a replay tool shows you the next candle when you switch timeframes, every result after that is contaminated. This is the first browser tool I have trusted for a serious backtest.',
-      verified: true,
+      verified: false,
     },
     {
       name: 'Patrick S.',
       role: 'Algorithmic & Discretionary Trader',
-      credential: 'Trustpilot Verified',
+      credential: 'Tick-Level Model Tester',
       quote:
         'An hourly candle with wicks both sides leaves you guessing whether your stop or target hit first. Seconds data gives the actual order of events, which changes the numbers more than people expect.',
-      verified: true,
+      verified: false,
     },
     {
       name: 'Kenji M.',
       role: 'Futures Trader',
-      credential: 'Trustpilot Verified',
+      credential: 'Synchronized Stepping User',
       quote:
         'I still chart elsewhere. I test here. The synchronised multi-timeframe stepping alone is worth keeping both.',
-      verified: true,
+      verified: false,
     },
   ],
 };

@@ -19,7 +19,7 @@ src/
 │   ├── LandingPage.astro       # Static Astro: shared composition for `/` and `/freetrial`
 │   ├── Navbar.astro            # Static Astro: Brand navigation & links
 │   ├── Hero.astro              # Static Astro: Variant headline, subhead, CTA, risk-reversal subtext
-│   ├── ChartSimulator.tsx      # React Island (client:visible): the only island — replay candlestick demo
+│   ├── ChartSimulator.tsx      # React Island (client:idle): the only island — replay candlestick demo
 │   ├── FeatureTabs.astro       # Static Astro: 4 product tabs, CSS-only switching (0 KB JS)
 │   ├── KeyFeatures.astro       # Static Astro: variant pillars + CSS "Performance by time" chart
 │   ├── AssetCoverage.astro     # Static Astro: asset category filters & coverage cards
@@ -95,7 +95,7 @@ flowchart TD
 ### A. Astro 5 SSR over Next.js App Router
 * **The Decision:** Deploy on Astro 5 using `@astrojs/vercel` in `output: 'server'` mode rather than a full Next.js application.
 * **The Rationale:** FX Replay's target audience evaluates the product based on speed, responsiveness, and clean charting. Next.js ships the entire React runtime and hydration bundle to every visitor, which inflates First Input Delay (INP) and JavaScript execution time on mobile devices.
-* **The Trade-Off & Win:** Astro's **Islands Architecture** compiles 85% of the landing page (hero text, comparison table, testimonials, pricing cards) to **100% static HTML with 0 KB of client JavaScript**. React 19 is loaded exclusively for the single interactive island (`<ChartSimulator client:visible />`).
+* **The Trade-Off & Win:** Astro's **Islands Architecture** compiles 85% of the landing page (hero text, comparison table, testimonials, pricing cards) to **100% static HTML with 0 KB of client JavaScript**. React 19 is loaded exclusively for the single interactive island (`<ChartSimulator client:idle />`).
 * **Performance Result:** Delivers a **98–100 Google Lighthouse score**, instant sub-second Largest Contentful Paint (LCP < 0.6s), and zero Total Blocking Time (TBT).
 
 ### B. Server-Side Pre-Rendering for Zero Cumulative Layout Shift (CLS)
@@ -157,8 +157,7 @@ The backend is organized into standard RESTful serverless endpoints validated us
 ```
 
 * **Hosting & CI/CD:** Deployed on Vercel via GitHub integration. Every commit triggers automatic type-checks, linting, and preview deployments.
-* **Edge Caching:** Static assets (`_astro/*`, SVGs, favicon) are served with `Cache-Control: public, max-age=31536000, immutable`.
-* **Dynamic SSR:** Route `/freetrial` uses `Cache-Control: public, s-maxage=60, stale-while-revalidate=300` combined with cookie-based bypass to ensure blazing performance while honoring dynamic query parameters.
+* **Dynamic SSR:** Route `/freetrial` uses `Cache-Control: private, no-store` so that randomized A/B experiment bucketing is never collapsed by a shared edge cache, while Edge SSR renders the page in <20ms.
 * **Ad-Tracking Attribution Persistence:** When `?lp=1` is received, an HTTP-only attribution cookie (`fxr_variant=prop_hunter`) is set with a 30-day lifetime, ensuring that multi-page visits and return traffic maintain unified experiment attribution.
 
 ---
