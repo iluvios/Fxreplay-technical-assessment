@@ -282,7 +282,7 @@ export default function SignupForm({ lp, submitLabel, variantId, experimentId }:
         </button>
 
         <p className="mt-4 text-center text-xs text-ink-subtle">
-          No credit card required. Free plan available forever.
+          5-day free trial. No credit card required.
         </p>
       </div>
     </form>
@@ -313,7 +313,7 @@ function CardChrome({ tone, label }: { tone: 'brand' | 'success'; label: string 
         className={`inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 font-mono text-[10px] font-medium uppercase tracking-[0.16em] ${chip}`}
       >
         <span className={`h-1.5 w-1.5 rounded-full ${dot}`} aria-hidden="true" />
-        Free plan
+        Free trial
       </span>
     </div>
   );

@@ -1,7 +1,8 @@
 # FX Replay — Growth Engineer Technical Challenge
 
 **Johan Daniel Álvarez**
-[github.com/iluvios/Fxreplay-technical-assessment](https://github.com/iluvios/Fxreplay-technical-assessment)
+Live: [fxreplay-technical-assessment.vercel.app](https://fxreplay-technical-assessment.vercel.app/)
+Code: [github.com/iluvios/Fxreplay-technical-assessment](https://github.com/iluvios/Fxreplay-technical-assessment)
 
 Astro 5 · React 19 · Tailwind · TypeScript · Neon Postgres · PostHog · Vercel
 

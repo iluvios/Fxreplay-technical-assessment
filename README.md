@@ -1,127 +1,63 @@
 # FX Replay — Growth Engineer Technical Challenge
 
-> Production-minded marketing, acquisition, and experimentation experience centered around **"Try FX Replay Free"**, built with **Astro 5**, **React 19 Islands**, **TypeScript**, **Tailwind CSS**, and **Claude Code**.
+**Johan Daniel Álvarez** · Astro 5 · React 19 · Tailwind · TypeScript · Neon Postgres · PostHog · Vercel
+
+### 🔗 Live: **[fxreplay-technical-assessment.vercel.app](https://fxreplay-technical-assessment.vercel.app/)**
+### 📄 Full write-up: **[SUBMISSION.md](SUBMISSION.md)** — all six deliverables in one document.
 
 ---
 
-👉 **[Read the Complete Unified Technical Submission (SUBMISSION.md)](SUBMISSION.md)**  
-*(All 6 required deliverables from the challenge specification synthesized into a single, concise document).*
+## Links
+
+| Route | What you'll see |
+|---|---|
+| [`/`](https://fxreplay-technical-assessment.vercel.app/) | Landing page, control copy |
+| [`/freetrial?lp=1`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=1) | **ICP 1** — Prop Firm Challenge Hunter |
+| [`/freetrial?lp=2`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=2) | **ICP 2** — 9-to-5 Weekend Warrior |
+| [`/freetrial?lp=3`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=3) | **ICP 3** — TradingView Skeptic |
+| [`/signup?lp=1`](https://fxreplay-technical-assessment.vercel.app/signup?lp=1) | Signup page (a real page, not a modal) |
+| [`/marketingengine`](https://fxreplay-technical-assessment.vercel.app/marketingengine) | 🔐 Admin console |
+| [`/api/users`](https://fxreplay-technical-assessment.vercel.app/api/users?limit=5) | Signups API |
+
+**Admin login:** `admin` / `fxreplay`
+Conversion overview, variant copy comparison, traffic allocation, signup attribution, and
+the autonomous agent's decision log.
+
+### Seeing a specific variant
+
+Each `?lp=` bucket serves one of three competing headlines plus the control, assigned
+server-side and sticky per visitor — so reloading keeps you in the same arm. To force one
+for review, append `&variant=` with any arm of that experiment, keyed to
+[`src/lib/copy-dictionary.ts`](src/lib/copy-dictionary.ts):
+
+| | |
+|---|---|
+| ICP 1 | [`prop_fees`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=1&variant=prop_fees) · [`prop_rules`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=1&variant=prop_rules) · [`prop_funded`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=1&variant=prop_funded) |
+| ICP 2 | [`weekend_year`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=2&variant=weekend_year) · [`weekend_reps`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=2&variant=weekend_reps) · [`weekend_career`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=2&variant=weekend_career) |
+| ICP 3 | [`tv_bias`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=3&variant=tv_bias) · [`tv_precision`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=3&variant=tv_precision) · [`tv_journal`](https://fxreplay-technical-assessment.vercel.app/freetrial?lp=3&variant=tv_journal) |
+
+Preview traffic is excluded from experiment results. Unknown `lp` values fall back to control.
 
 ---
 
-## 📑 Challenge Deliverables Map
-
-Every required deliverable from the technical challenge specification has been documented in depth:
-
-1. **[Architecture Overview](docs/1-ARCHITECTURE.md):** Application structure, Astro vs. Webflow trade-offs, and production scaling roadmap.
-2. **[Analytics & Measurement Plan](docs/2-ANALYTICS-PLAN.md):** Typed event taxonomy, conversion funnel targets, and reverse-proxy data accuracy.
-3. **[A/B Experiment Proposal](docs/3-EXPERIMENT-PROPOSAL.md):** Prop Firm Challenge Headline experiment (Hypothesis, Control, Variant, Decision criteria).
-4. **[AI-Native Workflow (Claude Code)](docs/4-AI-NATIVE-WORKFLOW.md):** `CLAUDE.md`, reusable skills, MCP architecture, and examples of human judgment over AI output.
-5. **[Performance & Production Readiness](docs/5-PERFORMANCE-REVIEW.md):** Core Web Vitals audit (solving the 7.8s LCP / 3,770ms TBT), Technical SEO, and accessibility.
-
----
-
-## ⚡ Quick Start (Local Setup)
-
-The project requires **Node.js 18+** and uses an in-memory repository pre-seeded with trader data for zero-dependency local evaluation.
+## Run it locally
 
 ```bash
-# 1. Clone repository
-git clone https://github.com/iluvios/Fxreplay-technical-assessment.git
-cd Fxreplay-technical-assessment
-
-# 2. Install dependencies
 npm install
-
-# 3. Start development server
 npm run dev
 ```
 
-Visit **`http://localhost:4321`** in your browser.
+Serves `http://localhost:4321` with an in-memory database — nothing to set up. Add a
+`DATABASE_URL` and run `npm run db:migrate` for real Postgres.
 
-### Experiment routes
-
-The landing experience resolves its copy variant from the `?lp=` query parameter on the server:
-
-| URL | ICP variant |
-|---|---|
-| `/freetrial` or `/` | Control (baseline `fxreplay.com` messaging) |
-| `/freetrial?lp=1` | Prop Firm Challenge Hunter (loss aversion) |
-| `/freetrial?lp=2` | 9-to-5 Weekend Warrior (time compression) |
-| `/freetrial?lp=3` | Systematizer / TradingView Skeptic (data precision) |
-
-Unknown or missing `lp` values fall back to control. Copy lives in
-[`src/lib/copy-dictionary.ts`](src/lib/copy-dictionary.ts); design tokens live in
-[`tailwind.config.mjs`](tailwind.config.mjs), transcribed from the official brand kit.
-
-### 🔐 Growth Admin Console (`/marketingengine`)
-Internal experimentation, user attribution registry, and AI agent command center:
-* **Route:** `/marketingengine`
-* **Credentials:** `admin` / `fxreplay`
-* **Features:** KPI conversion overview, side-by-side variant copy comparison, arm CRUD & traffic allocation, user attribution list, and autonomous agent evaluation.
-
----
-
-## 🔌 Users API Documentation
-
-The project includes a fully integrated Users API supporting **Create**, **List**, and **Update** operations with strict Zod schema validation.
-
-### 1. List Users (with Pagination)
 ```bash
-curl -X GET "http://localhost:4321/api/users?limit=10&offset=0"
-```
-**Response (200 OK):**
-```json
-{
-  "success": true,
-  "data": [
-    {
-      "id": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
-      "email": "alex.trader@example.com",
-      "name": "Alex Morgan",
-      "experienceLevel": "intermediate",
-      "primaryMarket": "forex",
-      "planTier": "free_trial",
-      "createdAt": "2026-09-13T12:00:00.000Z"
-    }
-  ],
-  "pagination": { "limit": 10, "offset": 0, "total": 2 }
-}
-```
-
-### 2. Create User (Integrated into Signup Flow)
-```bash
-curl -X POST "http://localhost:4321/api/users" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Jordan Bell",
-    "email": "jordan@example.com",
-    "experienceLevel": "advanced",
-    "primaryMarket": "futures"
-  }'
-```
-
-### 3. Update User
-```bash
-curl -X PATCH "http://localhost:4321/api/users/9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "planTier": "pro",
-    "onboardingCompleted": true
-  }'
+npm run db:status                  # what's in the database
+npm run db:report                  # signups by experiment arm and channel
+npm run eval-test -- --dry-run     # run the evaluation agent, change nothing
 ```
 
 ---
 
-## 🤖 AI-Native Development Assets
-
-* **Project-Level Instructions:** [`CLAUDE.md`](CLAUDE.md) enforces architectural constraints, brand design tokens, and verification gates.
-* **Reusable Claude Code Skill:** [`.claude/commands/cro-experiment.md`](.claude/commands/cro-experiment.md) automates the scaffolding and measurement of A/B test variants.
-
----
-
-## 🚀 Deployment
-
-The application is configured for 1-click deployment on **Vercel** (`@astrojs/vercel` adapter).
-
-The landing page is **server-rendered, not prerendered** — this is deliberate. The `?lp=` variant is resolved on the server so the ICP copy is already in the HTML on first paint, giving zero layout shift (no client-side text swap). The `/api/users` routes run as Vercel Serverless Functions.
+Long-form deliverables live in [`docs/`](docs/) — [architecture](docs/1-ARCHITECTURE.md),
+[analytics](docs/2-ANALYTICS-PLAN.md), [experiment proposal](docs/3-EXPERIMENT-PROPOSAL.md),
+[AI workflow](docs/4-AI-NATIVE-WORKFLOW.md), [performance](docs/5-PERFORMANCE-REVIEW.md).
