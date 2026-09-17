@@ -22,7 +22,7 @@ The project requires **Node.js 18+** and uses an in-memory repository pre-seeded
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/asjohan/Fxreplay-technical-assessment.git
+git clone https://github.com/iluvios/Fxreplay-technical-assessment.git
 cd Fxreplay-technical-assessment
 
 # 2. Install dependencies

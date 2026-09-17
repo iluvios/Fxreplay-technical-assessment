@@ -48,7 +48,8 @@ const FONT_HREF =
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href={FONT_HREF} />
-    <link rel="stylesheet" href={FONT_HREF} />
+    <link rel="stylesheet" href={FONT_HREF} media="print" onload="this.media='all'" />
+    <noscript><link rel="stylesheet" href={FONT_HREF} /></noscript>
 
     <!-- Structured data for SEO -->
     <script type="application/ld+json" set:html={JSON.stringify({

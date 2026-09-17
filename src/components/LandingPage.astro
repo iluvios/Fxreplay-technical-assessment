@@ -53,9 +53,9 @@ const title = `${copy.hero.headline} | FX Replay`;
     <main>
       <Hero copy={copy} ctaHref={ctaHref} />
 
-      <!-- The only React island on the page. -->
+      <!-- The only React island on the page (hydrated on idle to protect mobile main thread). -->
       <section id="simulator" class="mx-auto max-w-[1100px] px-4 pb-8 sm:px-6">
-        <ChartSimulator client:visible />
+        <ChartSimulator client:idle />
       </section>
 
       <FeatureTabs copy={copy} ctaHref={ctaHref} />

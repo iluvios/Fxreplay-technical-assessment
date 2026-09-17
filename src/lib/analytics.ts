@@ -1,4 +1,4 @@
-import posthog from 'posthog-js';
+import type { PostHog } from 'posthog-js';
 
 // Event Taxonomy Definition
 // Required by Section 4: Event Taxonomy & Conversion Funnel
@@ -48,32 +48,67 @@ export interface GrowthEventProperties {
   [key: string]: unknown;
 }
 
+/** Defer to the first idle moment after paint, so the SDK never competes with CSS/fonts. */
+function whenIdle(task: () => void) {
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(task, { timeout: 3000 });
+  } else {
+    window.setTimeout(task, 1200);
+  }
+}
+
 class AnalyticsManager {
-  private initialized = false;
+  /** Set once a PUBLIC_POSTHOG_KEY is present — i.e. events have somewhere to go. */
+  private configured = false;
+  /** The SDK, once its lazy chunk has landed. */
+  private client: PostHog | null = null;
+  /** Calls made before the SDK arrived. Replayed in order, so nothing is dropped. */
+  private pending: Array<(client: PostHog) => void> = [];
+  private loading = false;
 
   init() {
-    if (typeof window === 'undefined' || this.initialized) return;
+    if (typeof window === 'undefined' || this.loading) return;
 
     const apiKey = import.meta.env.PUBLIC_POSTHOG_KEY;
-    const apiHost = import.meta.env.PUBLIC_POSTHOG_HOST || '/ingest';
 
-    if (apiKey) {
-      posthog.init(apiKey, {
-        api_host: apiHost,
-        ui_host: 'https://us.posthog.com',
-        person_profiles: 'identified_only',
-        capture_pageview: false, // Handled explicitly to ensure accurate SPA/astro pageviews
-        autocapture: false, // Explicit taxonomy over messy autocapture
-        cross_subdomain_cookie: true,
-        session_recording: {
-          maskAllInputs: true,
-          maskTextSelector: '[data-attr="ph-no-capture"]',
-        },
-      });
-      this.initialized = true;
-    } else {
+    if (!apiKey) {
       console.info('[Analytics] PostHog API key not configured. Running in developer audit mode.');
+      return;
     }
+
+    this.configured = true;
+    this.loading = true;
+
+    // posthog-js is ~100 KB over the wire. A static import put it on the critical
+    // path, where it stole mobile bandwidth from the render-blocking CSS and fonts.
+    // Loading it on idle instead keeps first paint clean; events queue until it lands.
+    whenIdle(() => {
+      void import('posthog-js').then(({ default: posthog }) => {
+        posthog.init(apiKey, {
+          api_host: import.meta.env.PUBLIC_POSTHOG_HOST || '/ingest',
+          ui_host: 'https://us.posthog.com',
+          person_profiles: 'identified_only',
+          capture_pageview: false, // Handled explicitly to ensure accurate SPA/astro pageviews
+          autocapture: false, // Explicit taxonomy over messy autocapture
+          cross_subdomain_cookie: true,
+          session_recording: {
+            maskAllInputs: true,
+            maskTextSelector: '[data-attr="ph-no-capture"]',
+          },
+        });
+
+        this.client = posthog;
+        const queued = this.pending;
+        this.pending = [];
+        queued.forEach((call) => call(posthog));
+      });
+    });
+  }
+
+  /** Run now if the SDK is ready, otherwise hold the call until it is. */
+  private send(call: (client: PostHog) => void) {
+    if (this.client) call(this.client);
+    else this.pending.push(call);
   }
 
   track(eventName: GrowthEventName, properties: GrowthEventProperties = {}) {
@@ -88,8 +123,9 @@ class AnalyticsManager {
       screen_width: window.innerWidth,
     };
 
-    if (this.initialized) {
-      posthog.capture(eventName, enrichedProperties);
+    if (this.configured) {
+      // Timestamp is stamped here, not on flush, so queued events keep their real order.
+      this.send((client) => client.capture(eventName, enrichedProperties));
     } else {
       // In local testing/evaluation mode, log nicely formatted event to console for code reviewers
       console.log(`%c[Tracked Event: ${eventName}]`, 'color: #53B483; font-weight: bold;', enrichedProperties);
@@ -99,16 +135,17 @@ class AnalyticsManager {
   identify(userId: string, traits: Record<string, unknown>) {
     if (typeof window === 'undefined') return;
 
-    if (this.initialized) {
-      posthog.identify(userId, traits);
+    if (this.configured) {
+      this.send((client) => client.identify(userId, traits));
     } else {
       console.log(`%c[Identity Aliased: ${userId}]`, 'color: #0260FD; font-weight: bold;', traits);
     }
   }
 
+  /** Falls back until the SDK is loaded — variants are resolved server-side, never here. */
   getVariant(experimentName: string, fallback = 'control'): string {
-    if (typeof window === 'undefined' || !this.initialized) return fallback;
-    const flag = posthog.getFeatureFlag(experimentName);
+    if (typeof window === 'undefined' || !this.client) return fallback;
+    const flag = this.client.getFeatureFlag(experimentName);
     return typeof flag === 'string' ? flag : fallback;
   }
 }
