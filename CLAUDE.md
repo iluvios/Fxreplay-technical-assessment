@@ -61,3 +61,23 @@ Use the Tailwind token classes below; **never hard-code hex in components.**
 ## 4. Key Development Commands
 - `npm run dev`: Start local development server (`http://localhost:4321`)
 - `npm run build`: Verify TypeScript compliance and build output
+- `npm run db:migrate`: Apply `scripts/schema.sql` + `scripts/seed.sql` (idempotent)
+- `npm run eval-test -- --dry-run`: Run the evaluation agent without writing or changing traffic
+
+---
+
+## 5. Agent Surfaces (see `docs/4-AI-NATIVE-WORKFLOW.md`)
+Two distinct things are called "agent" in this repo — do not conflate them:
+- **`src/lib/agent/`** is *application code*: a headless cron job on Vercel. No Claude Code, no MCP.
+- **`.claude/agents/`** are *development subagents*: `experiment-copywriter` (writes one
+  `COPY_DICTIONARY` entry under the prohibited-claims list) and `analytics-auditor` (read-only
+  check that exposures and conversions still join).
+
+**Never compute experiment statistics by hand.** `src/lib/stats.ts` is deterministic and gates
+an automated kill switch; route every numeric question through `npm run eval-test -- --dry-run`.
+
+**Variant assignment is server-side** via `resolveLiveExperience()` in `src/lib/experiment-repo.ts`.
+Do not select copy with `analytics.getVariant()` — that is a client-side flag read and would
+reintroduce the layout shift §2.3 forbids.
+
+One decision vocabulary everywhere: `PROMOTE` · `KILL` · `HUMAN_REVIEW` · `CONTINUE`.

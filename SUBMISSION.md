@@ -1,259 +1,536 @@
-# FX Replay — Growth Engineer Technical Challenge Submission
+# FX Replay — Growth Engineer Technical Challenge
 
-> **Candidate:** Johan Daniel Álvarez  
-> **Repository:** [https://github.com/iluvios/Fxreplay-technical-assessment](https://github.com/iluvios/Fxreplay-technical-assessment)  
-> **Stack:** Astro 5 (SSR), React 19 Islands, Tailwind CSS, TypeScript, Neon PostgreSQL, PostHog  
+**Johan Daniel Álvarez**
+[github.com/iluvios/Fxreplay-technical-assessment](https://github.com/iluvios/Fxreplay-technical-assessment)
 
----
-
-## Table of Contents
-1. [Deliverable 1: Working Implementation & Setup](#1-working-implementation--setup)
-2. [Deliverable 2: Architecture Overview](#2-architecture-overview)
-3. [Deliverable 3: Analytics & Measurement Plan](#3-analytics--measurement-plan)
-4. [Deliverable 4: A/B Experiment Proposal](#4-ab-experiment-proposal)
-5. [Deliverable 5: AI-Native Development Workflow](#5-ai-native-development-workflow)
-6. [Deliverable 6: Performance, SEO & Production Readiness](#6-performance-seo--production-readiness)
+Astro 5 · React 19 · Tailwind · TypeScript · Neon Postgres · PostHog · Vercel
 
 ---
 
-## 1. Working Implementation & Setup
+## What this is
 
-### URLs
-* **GitHub Repository:** `https://github.com/iluvios/Fxreplay-technical-assessment`
-* **Live Deployment:** Configured for Vercel Edge SSR via `@astrojs/vercel`
+A landing page that changes its message depending on who the visitor is, plus the
+machinery to prove whether that actually works: an internal console for running the
+tests, and a robot that checks the results twice a day and acts on them.
 
-### Quick Start (Local Setup in Under 2 Minutes)
-This project requires **Node.js 18+** and runs with zero external dependencies out-of-the-box (in-memory repository fallback pre-seeded with sample traders).
+Three parts:
+
+1. **The public page** — one design, different copy per audience, decided on the server
+   so there's no flicker.
+2. **The admin console** (`/marketingengine`) — see who signed up, create and manage
+   experiments, watch what the robot decided.
+3. **The evaluation agent** — a scheduled job that pulls the numbers, does the
+   statistics, asks an AI to explain the result, then promotes the winner, kills the
+   loser, or asks a human.
+
+---
+
+## Running it
 
 ```bash
-# 1. Clone the repository
 git clone https://github.com/iluvios/Fxreplay-technical-assessment.git
 cd Fxreplay-technical-assessment
-
-# 2. Install dependencies
 npm install
-
-# 3. Start local development server
 npm run dev
 ```
-Open **`http://localhost:4321`** in your browser.
 
-### Key Routes
-| Route | Purpose | Behavior |
-| :--- | :--- | :--- |
-| `/freetrial` (or `/`) | Landing Experience | Serves baseline **Control** messaging. Zero client-side flicker. |
-| `/freetrial?lp=1` | Experiment Arm 1 | **Prop Firm Challenge Hunter** (loss aversion & fee savings). |
-| `/freetrial?lp=2` | Experiment Arm 2 | **Weekend Warrior** (trading 1 year of data on a Sunday). |
-| `/freetrial?lp=3` | Experiment Arm 3 | **TradingView Skeptic** (no lookahead bias, sub-second tick precision). |
-| `/signup?lp=X` | Dedicated Signup Page | Full-page form (no popup modal), client & server Zod validation. |
-| `/api/users` | Users API | `GET` (list paginated) & `POST` (create user with attribution). |
-| `/api/users/:id` | Users API | `GET` (read by ID) & `PATCH` (update profile). |
-| `/marketingengine` | Growth Admin Console | Internal experimentation, users registry & agent control center. |
-| `/ingest/*` | Telemetry Reverse Proxy | First-party reverse proxy to PostHog to bypass adblockers. |
+Open `http://localhost:4321`. It runs with no database — there's an in-memory fallback
+so nothing needs setting up to look around. Add a `DATABASE_URL` and run
+`npm run db:migrate` to use real Postgres.
 
-### 🔐 Growth Admin Console Credentials (`/marketingengine`)
-The internal growth experimentation dashboard is cookie-gated via `src/middleware.ts` (unauthorized page visits redirect to login with `?next=`, API routes return 401).
+**Admin console:** `/marketingengine` — username `admin`, password `fxreplay`.
 
-* **URL:** `https://fxreplay-technical-assessment.vercel.app/marketingengine` (or `http://localhost:4321/marketingengine`)
-* **Username:** `admin`
-* **Password:** `fxreplay`
-*(Configured in `src/lib/admin-auth.ts`, overridable via `ADMIN_USER` and `ADMIN_PASSWORD` env vars).*
+### The pages
 
-**Features inside the Console:**
-* **Overview:** High-level acquisition KPI tiles (views, signups, overall CR), experiment table, ICP directory, and recent agent calls.
-* **Experiments:** List & create experiments; detail inspector with arm CRUD (traffic weight, active toggle, promote, delete), side-by-side copy diff, live Z-test statistics, and decision audit logs.
-* **Users:** Paginated registry filterable by search, acquisition channel, trading goal, and experiment arm, showing exactly which variant converted each trader.
+| Route | What it does |
+|---|---|
+| `/` and `/freetrial` | The landing page, baseline message |
+| `/freetrial?lp=1` | Experiment for prop-firm traders — three competing messages vs the baseline |
+| `/freetrial?lp=2` | Experiment for time-poor professionals |
+| `/freetrial?lp=3` | Experiment for technical traders who already pay for charting |
+| `/signup` | The signup form (a real page, not a popup) |
+| `/marketingengine` | Admin console — overview, experiments, users, agent |
+| `/api/users` | Create and list signups |
+| `/api/engine/evaluate` | Triggers the evaluation agent |
 
-### Database Verification Commands
+### Useful commands
+
 ```bash
-# Check database tables and row counts (Neon PostgreSQL)
-npm run db:status
-
-# View live signup attribution report by experiment arm & channel
-npm run db:report
+npm run db:status                  # what's in the database
+npm run db:report                  # signups by experiment arm and by channel
+npm run eval-test -- --dry-run     # run the agent, change nothing
 ```
 
 ---
 
-## 2. Architecture Overview
+## 1. How it's built, and why
 
-```
-                      [Incoming Visitor Request]
-                                  │
-                                  ▼
-                    ┌───────────────────────────┐
-                    │    Vercel Edge Network    │
-                    └─────────────┬─────────────┘
-                                  │
-         ┌────────────────────────┴────────────────────────┐
-         │                                                 │
-         ▼                                                 ▼
-┌─────────────────────────────────┐       ┌─────────────────────────────────┐
-│       Static Assets (CDN)       │       │    Astro 5 SSR Server Engine    │
-├─────────────────────────────────┤       ├─────────────────────────────────┤
-│ • CSS chunks & Google Fonts     │       │ • Read ?lp= parameter           │
-│ • SVG logos & Webflow images    │       │ • Inject copy before paint      │
-│ • Cache: max-age=31536000       │       │ • Zero CLS (CLS = 0.00)         │
-└─────────────────────────────────┘       └────────────────┬────────────────┘
-                                                           │
-                                                           ▼
-                                          ┌─────────────────────────────────┐
-                                          │      Data & Analytics Layer     │
-                                          ├─────────────────────────────────┤
-                                          │ • Neon PostgreSQL (Serverless)  │
-                                          │ • In-Memory fallback repository │
-                                          │ • PostHog via /ingest proxy     │
-                                          └─────────────────────────────────┘
-```
+### One design, different words
 
-### Major Technical Decisions
-1. **Astro 5 SSR over Next.js/Webflow:**  
-   Next.js ships unnecessary React runtime to purely static content. Webflow carries heavy vendor scripts. Astro defaults to **0 KB client JavaScript** for navigation, hero typography, feature tabs, and footers.
-2. **Server-Side Experiment Resolution (Zero CLS):**  
-   The experiment arm is resolved on the server (`Astro.url.searchParams.get('lp')`) and injected directly into the HTML before sending to the client. The visitor never experiences text flicker or Cumulative Layout Shift (**CLS = 0.00**).
-3. **Islands Architecture (React 19 only where needed):**  
-   Client-side hydration is isolated to a single interactive component: `ChartSimulator.tsx` (`client:idle` using `lightweight-charts`). Everything else is static HTML/CSS.
-4. **Dedicated `/signup` Page over Modal:**  
-   Modals suffer from poor mobile usability, focus traps, and cannot be cleanly bookmarked or linked from external ads. A dedicated page preserves browser history and ensures clean ad attribution.
+Every version of the page uses the same layout, same components, same styling. Only the
+words change.
 
-### Important Trade-offs
-* **Dynamic SSR vs. Static Prerendering:** Static pages load slightly faster from edge cache, but cannot dynamically assign A/B test arms or preserve attribution without client-side JavaScript. We chose SSR with edge caching headers to guarantee instant paint with zero layout shift.
-* **Dual Persistence Layer:** The app connects to live Neon PostgreSQL via `@neondatabase/serverless`, but automatically falls back to an in-memory repository if `DATABASE_URL` is unset, making local evaluation effortless for reviewers.
+This is the most important decision in the whole project. If two versions of a page
+differ in layout *and* copy and one wins, you've learned nothing — you don't know which
+change caused it. Locking the design means a win is always attributable to the message.
 
-### What Would Change in a Full Production System
-* Dedicated PgBouncer connection pooler in front of PostgreSQL to handle high-frequency trading news traffic spikes.
-* Argon2id/bcrypt password hashing (plain strings accepted in this test simulation).
-* Upstash Redis rate-limiting on `/api/users` and `/ingest` to mitigate DDoS and spam signups.
+### The message is chosen on the server
 
----
+When someone lands on `?lp=1`, the server decides which version they get and writes that
+copy into the HTML before sending it. The browser receives the finished page.
 
-## 3. Analytics & Measurement Plan
+The tempting alternative is to send one page and swap the text in JavaScript once it
+loads. That's much easier, and it's wrong: the visitor sees the old headline flash and
+get replaced. Google measures that flicker (it's called layout shift), it lowers your ad
+quality score, and it makes the page feel cheap. Doing it on the server means zero
+flicker — measured CLS is 0.00.
 
-### Architecture & Tooling
-* **Provider:** PostHog.
-* **Reverse Proxy (`/ingest`):** Requests are routed through our own origin to prevent adblockers (used by ~25% of tech-savvy traders) from dropping telemetry.
+### Almost no JavaScript
 
-### Event Taxonomy
-| Event Name | Trigger | Key Properties |
-| :--- | :--- | :--- |
-| `landing_page_viewed` | Page load on `/` or `/freetrial` | `variant_id`, `visitor_id`, `channel`, `utm_source`, `utm_campaign` |
-| `experiment_variant_exposed` | Participant enters active experiment | `experiment_id`, `variant_id`, `is_control` |
-| `cta_button_clicked` | Click on any CTA | `cta_location` (`nav`, `hero`, `feature_tabs`, `asset_coverage`, `footer`), `cta_copy` |
-| `backtest_preview_interacted` | First interaction with chart canvas | `action` (`play`, `step`, `reset`) |
-| `signup_page_viewed` | Page load on `/signup` | `variant_id`, `experiment_id` |
-| `signup_form_started` | First focus on form field | `variant_id` |
-| `signup_form_submitted` | Form submission attempt | `icp_focus`, `variant_id` |
-| `signup_completed` | Account created (emitted from server) | `user_id`, `icp_focus`, `channel`, `experiment_id`, `variant_id` |
-| `signup_error_encountered` | Validation or network error | `error_message`, `error_field`, `error_code` |
+Astro sends plain HTML and CSS by default. The navigation, hero, feature tabs, pricing
+and footer ship **zero JavaScript**. Only one component is interactive — the chart
+simulator — and it loads on its own after the page is already usable.
 
-### 5-Stage Conversion Funnel
-1. **Funnel Entry:** `landing_page_viewed` (100%)
-2. **Engagement Step:** `cta_button_clicked` (Target: 15%–20%)
-3. **Intent Step:** `signup_page_viewed` (Target: 12%–15%)
-4. **Action Step:** `signup_form_started` (Target: 10%–12%)
-5. **Primary Conversion:** `signup_completed` (Target: 5%–8%)
+A React framework would have shipped its whole runtime just to render text that never
+changes. On mobile that's bandwidth taken from the things that actually need it.
 
-* **Primary Conversion Metric:** **Visitor-to-Account Conversion Rate**  
-  $$\text{Conversion Rate} = \frac{\text{Unique } \texttt{signup\_completed} \text{ events}}{\text{Unique } \texttt{landing\_page\_viewed} \text{ visitors}}$$
+### Signup is a page, not a popup
 
-### Data Quality & Trustworthiness
-* **Server-Side Canonical Emission:** `signup_completed` is dispatched directly by `/api/users` upon successful DB insert. It cannot be blocked by client extensions or lost during browser redirects.
-* **Denormalized Attribution:** UTMs and experiment arms travel on both the cookie and the event payload, preventing data loss if third-party cookies are disabled.
+Popups can't be linked from an ad, break the back button, and are awkward on phones. A
+real page at `/signup?lp=1` can be the direct destination of an ad, keeps browser
+history clean, and carries the experiment assignment with it.
 
----
+### Design choices that serve the conversion
 
-## 4. A/B Experiment Proposal
+Working inside the existing brand — the near-black surfaces, electric blue, Lato and
+Nunito Sans, JetBrains Mono for anything numeric — rather than inventing a new direction.
 
-### Experiment Title: Prop Firm Challenge Loss Aversion
-* **Experiment ID:** `exp_hero_prop_firm_v1`
-* **Target Audience:** Prop Firm Challenge Hunter (traders actively taking FTMO, Apex, or Topstep evaluations).
+**The headline splits into setup and payoff.** Several variants are written as a turn:
+*"Most evaluations aren't lost on strategy. They're lost on the daily drawdown."* The
+second sentence renders in brand blue, so the turn lands visually as well as verbally.
+Headlines without an internal break render normally — the layout never requires the copy
+to have a particular shape.
 
-### Hypothesis
-If we change the hero messaging from a generic trading simulator to a specific **prop firm evaluation practice tool focused on avoiding $300 reset fees**, then visitor-to-signup conversion will increase by $\ge 25\%$, because loss aversion is a stronger psychological motivator than general practice.
+**A faint chart grid behind the hero**, pure CSS, fading out before it reaches the text.
+It makes the page read as a trading surface instead of a generic SaaS page, costs no
+image request, and can't shift the layout.
 
-### Control vs. Variant Copy
-| Element | Control Baseline (`/freetrial`) | Variant 1 (`/freetrial?lp=1`) |
-| :--- | :--- | :--- |
-| **Eyebrow** | `REPLAY TRADING PLATFORM` | `PROP FIRM CHALLENGE ACCELERATOR` |
-| **Headline** | The Market Simulator for Serious Traders | Stop burning $300 challenge fees. Prove your edge first. |
-| **Subheadline** | Replay real historical markets, practice your strategy risk-free, and build consistency before trading live capital. | Simulate FTMO and Apex drawdown rules bar-by-bar. Stress-test your risk before you buy a real evaluation. |
-| **Primary CTA** | `Get started for free` | `Test Your Prop Strategy Free` |
-| **Microcopy** | Free to start. No credit card required. | No credit card required. Practice prop rules 100% free. |
+**A second path for people who want proof before a form.** Not everyone is ready to sign
+up on arrival. "Try the replay first" scrolls to the interactive simulator already on the
+page — which costs nothing to offer and keeps a sceptical visitor on the page instead of
+bouncing.
 
-### Sample Size & Statistical Methodology
-* **Baseline CR ($p_c$):** 3.5%
-* **Minimum Detectable Effect (MDE):** +25% relative lift (Target CR: 4.38%)
-* **Significance Level ($\alpha$):** 0.05 (95% confidence, two-tailed)
-* **Statistical Power ($1 - \beta$):** 0.80 (80% power)
-* **Required Sample Size:** **$n \ge 1,240$ unique visitors per arm** ($\approx 2,480$ total).
-* **Minimum Test Duration:** 7 full calendar days (to capture weekend trading behavior).
+**The signup page continues the argument.** It carries the same eyebrow, the two benefit
+cards the visitor just read, and a testimonial from the matching audience. It answers the
+four unspoken objections at the moment of commitment — what does it cost, is the data
+real, do I have to do the boring part, can I leave. Previously it dropped the pitch
+entirely and showed a bare form, which is where funnels leak.
 
-### Decision Criteria
-* **Ship Variant:** Relative lift $\ge +10\%$, $p < 0.05$, and $n \ge 1,240$ per arm.
-* **Continue Test:** Sample size $< 1,240$, or $0.05 \le p < 0.10$ with positive trend (run up to 14 days maximum).
-* **Reject Variant:** Relative lift $\le 0\%$ with $p < 0.05$, or no statistical difference after 14 days and $n \ge 2,500$.
+The asset band under the hero lists real product coverage rather than simulated ticker
+prices. Fake live numbers would look convincing to this audience for about two seconds.
+
+### The database decides what's live, the code decides what it says
+
+A deliberate split:
+
+- **The words** live in code (`src/lib/copy-dictionary.ts`) — reviewed, type-checked,
+  shipped with the build. Not editable from the admin UI.
+- **Who sees what** lives in the database — which experiments are running, traffic
+  split, which arms are switched on.
+
+So marketing copy goes through code review, but pausing an experiment or killing a bad
+variant happens instantly from the console, with no deploy. That split is what makes the
+automated agent possible at all.
+
+### If it breaks, the signup still works
+
+If the database is unreachable, the app falls back to in-memory storage rather than
+failing. You lose some analytics fidelity; you don't lose the customer. That's the right
+trade for a page whose entire job is conversion.
+
+### What I'd change for real production
+
+- Hash passwords. They're stored as plain text here because it's a simulated signup —
+  this is called out in the schema and would obviously never ship.
+- Real authentication on the admin console — SSO, not a hardcoded password.
+- Rate limiting on the signup and telemetry endpoints.
+- Connection pooling in front of Postgres for traffic spikes around news events.
 
 ---
 
-## 5. AI-Native Development Workflow
+## 2. Measuring it
 
-### System Architecture Around Claude Code
-```
-                     ┌─────────────────────────────────┐
-                     │    Human Engineer (Strategy)    │
-                     └────────────────┬────────────────┘
-                                      │ Prompts & Constraints
-                                      ▼
-                     ┌─────────────────────────────────┐
-                     │     CLAUDE.md Master Direct     │
-                     └────────────────┬────────────────┘
-                                      │ Coordinates
-         ┌────────────────────────────┼────────────────────────────┐
-         ▼                            ▼                            ▼
-┌──────────────────┐         ┌──────────────────┐         ┌──────────────────┐
-│  Research Agent  │         │  UI Builder Agent│         │ CRO Auditor Agent│
-│  (Assets/Tokens) │         │  (Astro/Tailwind)│         │ (Stats & Z-Tests)│
-└──────────────────┘         └──────────────────┘         └──────────────────┘
-```
+Analytics runs on PostHog.
 
-1. **Project Instructions (`CLAUDE.md`):**  
-   Committed at repository root. Enforces the official FX Replay Brand Kit tokens (`#0260FD`, `#030303`, Lato/Nunito Sans/JetBrains Mono), bans modal popups for signup, and mandates 0 KB static HTML for marketing sections.
-2. **Reusable Skills & Commands:**
-   * [`.claude/commands/cro-experiment.md`](.claude/commands/cro-experiment.md): Automatically scaffolds new experiment variants with typed dictionary entries and telemetry hooks.
-   * [`.claude/skills/growth-experiment-analyzer/SKILL.md`](.claude/skills/growth-experiment-analyzer/SKILL.md): Executes two-tailed Z-tests, verifies MDE sample thresholds, and outputs autonomous Ship/Continue/Kill recommendations.
-3. **MCP Architecture:**
-   * *Production PostHog MCP:* Enables agents to query live conversion funnels directly from Claude Code.
-   * *Production Neon PostgreSQL MCP:* Inspects schema migrations and validates SQL queries before deployment.
+**Events go through our own domain.** Requests route through `/ingest` on our origin
+rather than straight to PostHog. Ad blockers block PostHog's domain, and the people most
+likely to run an ad blocker are exactly the technical traders this product targets — so
+that data loss isn't random, it's biased against the audience we care about.
 
-### Human Judgment: Where AI Output Was Corrected
-* **Rejected Signup Modal:** Claude originally suggested a modal dialog. Human judgment overrode this in favor of a dedicated `/signup?lp=X` page to ensure direct ad linkability, clean history navigation, and mobile usability.
-* **Rejected Client-Side Copy Swapping:** Claude initially implemented client-side `useEffect` text replacement. Human judgment enforced server-side query parameter SSR to guarantee **CLS = 0.00**.
-* **Corrected Color Tokens:** Claude defaulted to standard Tailwind `blue-600` (`#2563EB`). Human caught the drift and enforced official FX Replay Brand Kit Electric Blue (`#0260FD`).
-* **Fixed Mobile Font Render-Blocking:** Claude included Google Fonts as a synchronous stylesheet, causing mobile Lighthouse to score 77. Human re-engineered it to non-blocking `media="print"` with `display=swap`, restoring performance to 90+.
+**The conversion event is sent by the server, not the browser.** When an account is
+created, the server records it. A browser event can be blocked, or lost if someone
+closes the tab during the redirect. The number that decisions are based on has to be the
+one that can't go missing.
+
+### What gets tracked
+
+| Event | When |
+|---|---|
+| `landing_page_viewed` | Page loads |
+| `experiment_variant_exposed` | Visitor enters a running experiment |
+| `cta_button_clicked` | Any call-to-action clicked (records which one) |
+| `backtest_preview_interacted` | First interaction with the chart |
+| `signup_page_viewed` | Signup page loads |
+| `signup_form_started` | First field focused |
+| `signup_form_submitted` | Form submitted |
+| `signup_completed` | Account actually created — **sent by the server** |
+| `signup_error_encountered` | Validation or network failure |
+
+Every event carries the acquisition channel and campaign, so any funnel can be split by
+where the traffic came from without joining to another table.
+
+**The main number:** unique visitors who create an account ÷ unique visitors who saw the
+page.
+
+### Where attribution comes from
+
+Ad networks strip URL parameters sometimes. So the experiment assignment is recovered in
+order: the `?lp=` parameter, then the campaign name, then a 30-day cookie set on first
+visit. A signup gets attributed even when the link that produced it was mangled.
 
 ---
 
-## 6. Performance, SEO & Production Readiness
+## 3. The experiments
 
-### Core Web Vitals Audit
-* **Desktop Performance:** **99** (LCP: 0.5s, CLS: 0.00, TBT: 0ms).
-* **Mobile Performance:** **90+** achieved through 4 specific mitigations:
-  1. *Non-Blocking Fonts:* Google Fonts stylesheet loaded via `media="print" onload="this.media='all'"` prevents FCP delay on 4G networks.
-  2. *Idle Chart Hydration:* `ChartSimulator.tsx` uses `client:idle`, keeping the mobile main thread completely free during initial paint.
-  3. *Deferred PostHog SDK:* `posthog-js` (~307 kB) is dynamically imported on idle (`requestIdleCallback`), removing heavy scripts from first paint.
-  4. *Explicit Dimensions:* Explicit `width` and `height` on all images eliminate reflow.
+Three experiments, one per audience. Each runs **three competing messages against the
+same generic control** — the message people would otherwise have seen. So every test
+asks one question: does speaking to this audience specifically beat speaking to everyone?
 
-### Technical SEO & Accessibility
-* **SEO:** Single `<h1>` per page, semantic landmarks (`<header>`, `<main>`, `<footer>`), structured JSON-LD schema (`SoftwareApplication`), and canonical URL `<link rel="canonical" href="https://fxreplay.com/freetrial" />` across all variants to prevent duplicate content indexing.
-* **Accessibility (WCAG 2.1 AA):**
-  * Contrast: Body text (`#D1D1D1` on `#030303`) achieves **13:1** (exceeds AAA 7:1). Buttons (`#0260FD` on white) achieve **5.1:1** (exceeds AA 4.5:1).
-  * Feature tabs are native CSS radio inputs, operable via keyboard with visible `:focus-visible` styling.
-  * Form inputs have explicit labels, autocomplete attributes, and `aria-invalid` error messaging.
+Each arm tests exactly **one psychological mechanism**. Stacking two into a single arm
+makes a win unattributable, which defeats the purpose.
 
-### Production Risk Matrix
-| Risk | Severity | Implemented Mitigation |
-| :--- | :--- | :--- |
-| **Adblocker Telemetry Loss** | High | First-party reverse proxy (`/ingest`) + server-side event emission on `/api/users`. |
-| **Ad Network Parameter Stripping** | Medium | Multi-tier attribution cascade (`?lp=` $\to$ `utm_campaign` keyword match $\to$ 30-day session cookie). |
-| **Traffic Spikes (NFP/CPI News)** | High | Stateless serverless architecture + edge caching with Stale-While-Revalidate. |
-| **Premature Experiment Calls** | Medium | Strict MDE gate ($n \ge 1,240$) and 7-day full cycle constraint enforced before computing significance. |
+### Experiment 1 — Prop firm evaluation traders (`?lp=1`)
+
+They lose $150–600 every time they fail an evaluation, and 95% of them fail. That's a
+real, repeated, recent cost.
+
+| Arm | Headline | Mechanism |
+|---|---|---|
+| Control | Your strategy shouldn't be tested with real money | Generic baseline |
+| A (`prop_fees`) | Every failed evaluation costs $300. **This one costs nothing.** | Sunk cost — names money already lost |
+| B (`prop_rules`) | Your strategy didn't fail the challenge. **Your trailing drawdown did.** | Diagnosis — trailing drawdown on unrealised equity |
+| C (`prop_funded`) | Blow the account here first. **Resets are free.** | Earned confidence — $0 resets |
+
+### Experiment 2 — Time-poor professionals (`?lp=2`)
+
+Good jobs, capital to trade, no hours. The markets are closed exactly when they're free.
+
+| Arm | Headline | Mechanism |
+|---|---|---|
+| Control | Your strategy shouldn't be tested with real money | Generic baseline |
+| A (`weekend_year`) | A year of London opens, compressed into one Sunday. | Time compression — London open at your time |
+| B (`weekend_reps`) | Two setups a week is a six-year education. **Compress it.** | The repetitions maths |
+| C (`weekend_career`) | Build the screen time your day job keeps stealing from you. | Screen time without salary risk |
+
+### Experiment 3 — Technical traders who already pay for charting (`?lp=3`)
+
+Sophisticated, allergic to marketing language, and already paying someone else. Every
+claim here is one they can verify themselves in a few minutes.
+
+| Arm | Headline | Mechanism |
+|---|---|---|
+| Control | Your strategy shouldn't be tested with real money | Generic baseline |
+| A (`tv_bias`) | Your replay engine has already seen the next candle. | Invalidation — accuses engine of lookahead bias |
+| B (`tv_precision`) | Stop guessing whether your stop or your target hit first. | Measurement precision — ambiguous wick fills |
+| C (`tv_journal`) | A backtest that saw the candle first isn't a backtest. | Integrity — synchronised MTF stepping with zero leak |
+
+### What's held constant, and why it matters
+
+Within an experiment, **only the hero and signup copy change**. The feature descriptions,
+the four benefit cards and the testimonials are identical across all four arms.
+
+This is the single-design rule applied to the words themselves. If the headline, the
+benefits and the social proof all changed together, a win would tell you one bundle beat
+another bundle — not which message did the work. Everything runs through a small shared
+base per audience so this can't drift by accident.
+
+Traffic splits evenly. Which arm someone gets is decided by hashing their anonymous ID,
+so they see the same version on every visit — otherwise one person's journey splits
+across arms and the numbers stop meaning anything.
+
+### The cost of running three at once
+
+Three arms find a winner in one cycle instead of three sequential tests, which matters
+when each cycle needs ~1,240 visitors per arm.
+
+The price is that three arms get three chances to look like a winner by luck — roughly a
+14% chance one clears the usual bar when none of them actually works. So the agent
+tightens the bar in proportion (a Šidák correction: 0.05 becomes about 0.017 with three
+arms). An arm that would have won a two-arm test but doesn't clear the corrected bar gets
+escalated to a human rather than promoted or silently ignored.
+
+### How long it needs to run
+
+- Baseline conversion: 3.2%
+- Confidence required: 95%
+- **Needs about 1,240 visitors per arm**, and at least 7 full days so weekday and weekend
+  traffic are both represented.
+
+**An honest caveat:** 1,240 visitors per arm is only enough to reliably detect a fairly
+large improvement — roughly +62% relative. Detecting a subtler +25% improvement would
+need about 7,700 per arm. The brief's spec stated both a small target effect *and* the
+1,240 figure, which don't agree with each other; I kept 1,240 (the number the rest of the
+system is built around) and documented what it actually buys rather than quietly
+inheriting a misleading number.
+
+### What happens at the end
+
+- **Ship it** if the variant is at least 15% better and the result is statistically solid.
+- **Kill it** if it's 25% or more *worse* — stop wasting ad spend immediately.
+- **Ask a human** if it's close to significant but not there, or if the data looks wrong.
+- **Keep running** if there just isn't enough data yet.
+
+---
+
+## 4. The admin console
+
+At `/marketingengine`. Four screens, no client-side JavaScript at all — every action is a
+normal form submission.
+
+**Overview** — how many experiments are running, how many signups, how many are
+attributed to a test, and what the agent last decided.
+
+**Experiments** — list everything, create a new test. Each experiment has a detail page
+showing:
+- current conversion rates and whether the result is significant yet
+- the arms, with traffic weights, an on/off switch, and a promote button
+- the copy of every arm side by side, so you can see what's actually being tested
+- the full history of every decision the agent has made about it
+
+**Users** — every signup, filterable by search, channel, stated trading goal, or
+experiment. Crucially it shows *which message* converted each person, so you can trace a
+customer back to the ad and the headline that got them.
+
+**Agent** — what the robot is configured to do, whether its dependencies are connected,
+and the complete decision log.
+
+Turning off an arm here takes effect on the next page load. That's not cosmetic — it's
+the same mechanism the agent uses to stop a losing variant.
+
+---
+
+## 5. The evaluation agent
+
+The problem this solves: experiments get forgotten. A variant quietly underperforms for a
+week while ad budget burns, or someone checks too early, sees a promising number, and
+ships something that was noise.
+
+A scheduled job runs and does four things in this order:
+
+**1. Collect** — pull exposure and conversion counts per arm from PostHog, and verified
+account rows from the database.
+
+**2. Calculate** — run the statistics in plain, deterministic code. Sample size check,
+then a standard significance test.
+
+**3. Explain** — hand the finished numbers to an AI model along with the audience profile
+and the actual headlines, and ask it *why* the result looks like this.
+
+**4. Act** — promote the winner, kill the loser, escalate to a human, or leave it running.
+
+### The one design decision that matters here
+
+**The maths happens before the AI is involved, and the AI cannot change it.**
+
+An AI asked "is this significant?" will give you a confident, plausible, wrong answer.
+That number would be wired directly to a switch that reallocates real ad traffic. So the
+statistics are ordinary code with a known correct answer, the decision is made by explicit
+rules, and only then does a model get asked to write the explanation. A bad sentence can
+embarrass a report. It cannot touch the traffic.
+
+### It refuses to act on bad data
+
+If the analytics show no page views but some signups, that's impossible — something is
+broken. Rather than reporting a confident "0% conversion rate", the agent recognises the
+data is untrustworthy, refuses to promote or kill anything, and escalates to a human.
+
+Everything it does is written to an audit log, including the runs where it decided to do
+nothing. Anything that can pause live traffic has to be reconstructable afterwards.
+
+### Running it
+
+```bash
+npm run eval-test                                      # evaluate everything live
+npm run eval-test -- --dry-run                         # calculate, change nothing
+npm run eval-test -- --dry-run --fixture 3420,110,3580,172
+```
+
+That last one feeds made-up numbers through the real pipeline so you can watch the
+promote and kill logic fire before there's enough real traffic to trigger them. It only
+works in dry-run mode — invented numbers can never move real traffic.
+
+---
+
+## 6. Working with AI
+
+### Project rules
+
+`CLAUDE.md` at the repo root is a constraint file every AI session inherits: don't invent
+copy (the specs already exist), keep marketing sections at zero JavaScript, resolve
+variants on the server, use the brand colour tokens rather than raw hex codes.
+
+Most of the value is in the *prohibitions*. Left alone, a model writing growth code will
+cheerfully add a React component to a static page and invent marketing claims nobody
+approved.
+
+### Two specialist agents
+
+- **`experiment-copywriter`** — writes a new message variant. Carries the banned-claims
+  list (no guaranteed funding, no promised returns — prop firms prohibit that language
+  and traders read it as a scam signal) and the single-design rule. Can edit files, can't
+  touch the database.
+- **`analytics-auditor`** — read-only. Checks that page views and signups can still be
+  matched up per arm. Deliberately can't fix what it finds; an auditor that edits code
+  stops being an independent check.
+
+I wrote two rather than a larger set. A specialist agent earns its place when it carries
+rules that would otherwise need re-explaining every time — not because more boxes make a
+better diagram.
+
+### A skill and a command
+
+- **`growth-experiment-analyzer`** — for discussing results. Its most important rule is a
+  ban: never calculate the statistics yourself, always run the real code.
+- **`/cro-experiment`** — scaffolds a new experiment, and makes you verify the new copy is
+  in the server's HTML rather than just checking the build passed. The wrong
+  implementation also builds cleanly.
+
+### MCP
+
+`.mcp.json` connects PostHog and the database to the editor for asking questions while
+building. The database connection is **read-only** — something answering questions about
+the data has no business being able to change which copy live traffic sees.
+
+The production agent deliberately does *not* use MCP. MCP connects a running assistant to
+tools; the agent is a scheduled job that needs two API calls and must work whether or not
+anyone's laptop is open.
+
+### Where AI genuinely helped
+
+Expanding one messaging idea into complete, valid copy for four audiences. Writing the
+database schema and validation contracts consistently across several files. Implementing
+the statistical formulas — well-defined maths with a known right answer is the safest
+thing to delegate. And the sheer volume of the admin console: ten screens of forms and
+tables where speed matters and mistakes are obvious on sight.
+
+### Where I had to correct it
+
+These are the useful ones, because they share a pattern: **the code ran, the build
+passed, and the answer was wrong in a way that looked completely reasonable.**
+
+1. **The analytics couldn't be joined.** The browser labelled each page view with one ID
+   and the server labelled each signup with a different one. Every report would have shown
+   0% conversion for every variant — a wrong answer that looks like a real one. Found by
+   writing the query and asking what it would actually match.
+
+2. **An empty form field became zero.** Leaving "baseline conversion rate" blank stored 0
+   instead of nothing, which made the required sample size collapse from 1,240 visitors to
+   **4**. The agent would have declared a winner based on almost no data. Found by
+   actually creating an experiment through the form instead of trusting the code.
+
+3. **The spec's own arithmetic didn't add up.** The sample-size figure and the target
+   effect in the brief contradicted each other. Rather than copying the number or silently
+   changing it, I corrected it and wrote down what it really means.
+
+4. **Promoting a winner threw the winner away.** Clicking "promote" marked the experiment
+   finished, which made the page revert to the losing copy — the exact opposite of the
+   intent. Found by clicking the button and then looking at the page.
+
+5. **Missing data displayed as a real measurement.** With no page views recorded, the
+   dashboard showed a confident "0.00% conversion rate" next to real signups. Absence was
+   being rendered as a fact.
+
+**The lesson:** with AI-generated code, reading the diff catches what looks wrong. Only
+running the real path catches what *reads* right and is false. Every one of these came
+from clicking the actual button, not from review.
+
+### Judgment I kept for myself
+
+The loss-aversion angle — that prop traders have a specific dollar figure they've already
+lost — came from reading how these traders actually talk. Prompted generically, a model
+produces "become a master trader."
+
+Same for the single-design rule, and for insisting the statistics sit outside the AI. Those
+are the decisions that determine whether any of the rest is trustworthy.
+
+---
+
+## 7. Performance and production
+
+### Real measured scores
+
+PageSpeed on the live Vercel deployment:
+
+- **Desktop: 99** — LCP 0.5s, CLS 0.00, blocking time 0ms
+- **Mobile: 77** — LCP 4.1s, CLS 0.00, blocking time 0ms
+
+**Mobile is 77 and I chose to leave it there.** The single remaining bottleneck is the
+Google Fonts stylesheet, worth roughly 300–700ms. Fixing it means copying eight font
+files into the repo and maintaining them. For an assessment build I judged that a poor
+trade — the layout shift score is already perfect, nothing is janky, and the fix is
+mechanical rather than interesting. It's a deliberate call, not an oversight, and I'd make
+the opposite call on a page actually receiving paid traffic.
+
+### What's already optimised
+
+- Fonts load without blocking the first paint.
+- The analytics SDK (~300KB) loads only when the browser is idle, never during first
+  paint.
+- The chart component hydrates on its own schedule.
+- Images have explicit dimensions so nothing reflows.
+
+### SEO and accessibility
+
+One `<h1>` per page, proper semantic sections, structured data for search engines, and a
+canonical URL shared across all variants so the different `?lp=` versions don't compete
+with each other in search results.
+
+Body text sits at 13:1 contrast (well past the AAA standard). The feature tabs are native
+radio inputs, so they work with a keyboard for free. Form fields have real labels and
+proper error messaging.
+
+### Risks I planned for
+
+| Risk | What I did |
+|---|---|
+| Ad blockers eating the data | Analytics through our own domain; conversion recorded server-side |
+| Ad networks stripping URL parameters | Three-layer fallback — parameter, campaign name, cookie |
+| Traffic spikes on news events | Nothing holds state; scales with the platform |
+| Calling a test too early | Sample-size gate enforced in code, before significance is even calculated |
+| The agent making a bad call | Both automatic actions reverse in one click, and everything is logged |
+
+---
+
+## 8. What I left out, and why
+
+- **Passwords are plain text.** Deliberate for a simulated signup, flagged in the schema.
+- **Admin login is a hardcoded password.** A real deployment would put this behind company
+  SSO; building half a login system would be effort spent on the one part guaranteed to be
+  thrown away.
+- **Scroll depth and time-on-page aren't collected.** The database has columns for them
+  and the design references them, but nothing populates them yet. I'd rather say that than
+  show an empty chart implying otherwise.
+
+---
+
+## Where things live
+
+| | |
+|---|---|
+| Page copy for every variant | `src/lib/copy-dictionary.ts` |
+| Who sees which variant | `src/lib/experiment-repo.ts` |
+| The statistics | `src/lib/stats.ts` |
+| The agent, in four stages | `src/lib/agent/` |
+| Database schema | `scripts/schema.sql` |
+| Admin console | `src/pages/marketingengine/` |
+| AI setup | `CLAUDE.md`, `.claude/`, `.mcp.json` |

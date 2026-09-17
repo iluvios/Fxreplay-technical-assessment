@@ -55,26 +55,75 @@ export interface Assignment {
 }
 
 /**
- * Experiment registry.
+ * Experiment registry — the static fallback used when the database is unreachable.
+ * The live source is the `experiments` table (see src/lib/experiment-repo.ts).
  *
- * Deliberately a single two-arm test: control vs one variant reaches significance far
- * sooner than a multi-arm split and needs no multiple-comparison correction. Additional
- * ICP angles run as sequential follow-up experiments, not parallel arms.
+ * One experiment per ICP, each testing three competing messages against the same
+ * generic control. Every arm asks the same question: does speaking to this audience
+ * specifically beat the message they would otherwise have seen?
+ *
+ * Three treatment arms per experiment is a deliberate cost. It finds a winner in one
+ * cycle instead of three sequential tests, which matters when each cycle needs ~1,240
+ * visitors per arm — but testing three hypotheses at once inflates the chance that one
+ * looks significant by luck. `src/lib/agent/decide.ts` applies a Šidák correction to
+ * the promote gate to pay for that.
  */
 export const EXPERIMENTS: Record<string, Experiment> = {
   '1': {
     id: '1',
-    name: 'prop_firm_loss_aversion_headline',
+    name: 'prop_firm_message_angle',
     icp_id: 'icp_prop_hunter',
     hypothesis:
-      'Framing the hero around the sunk cost of failed prop-firm evaluations (loss aversion) ' +
-      'converts better than the generic risk-free-backtesting baseline, because the prop-firm ' +
-      'audience already has a quantified, recurring monetary loss.',
+      'For prop-firm evaluation traders, a hero that names a specific cost they have ' +
+      'already paid — failed evaluation fees, the daily drawdown rule, or the absence of ' +
+      'a track record — converts better than the generic risk-free-backtesting baseline, ' +
+      'because this audience has a quantified, recurring and recent monetary loss.',
     status: 'running',
     primary_metric: 'signup_completed',
     arms: [
-      { variant_key: 'control', weight: 50, is_control: true },
-      { variant_key: '1', weight: 50, is_control: false },
+      { variant_key: 'control', weight: 25, is_control: true },
+      { variant_key: 'prop_fees', weight: 25, is_control: false },
+      { variant_key: 'prop_rules', weight: 25, is_control: false },
+      { variant_key: 'prop_funded', weight: 25, is_control: false },
+    ],
+  },
+
+  '2': {
+    id: '2',
+    name: 'weekend_warrior_message_angle',
+    icp_id: 'icp_weekend_warrior',
+    hypothesis:
+      'For time-poor professionals, a hero built on the scarcity of practice time — ' +
+      'compressed market hours, accumulated repetitions, or learning without risking ' +
+      'salary — converts better than the generic baseline, because their blocker is ' +
+      'available hours rather than money or motivation.',
+    status: 'running',
+    primary_metric: 'signup_completed',
+    arms: [
+      { variant_key: 'control', weight: 25, is_control: true },
+      { variant_key: 'weekend_year', weight: 25, is_control: false },
+      { variant_key: 'weekend_reps', weight: 25, is_control: false },
+      { variant_key: 'weekend_career', weight: 25, is_control: false },
+    ],
+  },
+
+  '3': {
+    id: '3',
+    name: 'precision_message_angle',
+    icp_id: 'icp_tv_skeptic',
+    hypothesis:
+      'For technical traders already paying for a charting tool, a hero making a ' +
+      'falsifiable claim about measurement fidelity — no lookahead bias, tick-level ' +
+      'fills, or journalled expectancy — converts better than the generic baseline, ' +
+      'because this audience distrusts marketing language and responds to specifics ' +
+      'they can verify themselves.',
+    status: 'running',
+    primary_metric: 'signup_completed',
+    arms: [
+      { variant_key: 'control', weight: 25, is_control: true },
+      { variant_key: 'tv_bias', weight: 25, is_control: false },
+      { variant_key: 'tv_precision', weight: 25, is_control: false },
+      { variant_key: 'tv_journal', weight: 25, is_control: false },
     ],
   },
 };

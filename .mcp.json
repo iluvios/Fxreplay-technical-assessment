@@ -1,0 +1,35 @@
+{
+  "$comment": [
+    "Project-scoped MCP servers for working ON this repo — exploration and diagnosis from",
+    "the editor. Deliberately NOT what the autonomous evaluation agent uses: that runs",
+    "headless on Vercel Cron against the PostHog REST API and the Neon driver directly, so",
+    "it has zero dependency on a desktop session. See docs/4-AI-NATIVE-WORKFLOW.md §5.",
+    "",
+    "Both servers read credentials from the environment via ${VAR} expansion, so no secret",
+    "is committed. Values live in .env, which is gitignored.",
+    "",
+    "neon-readonly expects DATABASE_URL_READONLY — a role with SELECT and nothing else.",
+    "The write path is the application's; an assistant answering questions about the data",
+    "has no business holding UPDATE on the table that controls live ad traffic. Create it",
+    "with the SQL in docs/4-AI-NATIVE-WORKFLOW.md §5."
+  ],
+  "mcpServers": {
+    "posthog": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "mcp-remote@latest",
+        "https://mcp.posthog.com/mcp",
+        "--header",
+        "Authorization:${POSTHOG_AUTH_HEADER}"
+      ],
+      "env": {
+        "POSTHOG_AUTH_HEADER": "Bearer ${POSTHOG_PERSONAL_API_KEY}"
+      }
+    },
+    "neon-readonly": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-postgres", "${DATABASE_URL_READONLY}"]
+    }
+  }
+}

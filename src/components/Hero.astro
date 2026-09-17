@@ -2,6 +2,9 @@
 // Static hero (0 KB client JS) — docs/FRONTEND_BUILD_SPEC.md §3.2
 // Copy is injected server-side, so the variant headline is already in the HTML
 // on first paint. No client-side text swap => CLS 0.00.
+//
+// Structure is identical for every arm. Only the words differ — that is what makes a
+// win attributable to the message rather than to the layout it happened to arrive in.
 import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
 
 interface Props {
@@ -12,6 +15,25 @@ interface Props {
 
 const { copy, ctaHref } = Astro.props;
 const { hero, eyebrow } = copy;
+
+/**
+ * Split the headline at its first sentence break so the second half can carry the brand
+ * colour. Several variants are written as setup-then-payoff — "Most evaluations aren't
+ * lost on strategy. They're lost on the daily drawdown." — and colouring the payoff
+ * makes the turn land visually as well as verbally.
+ *
+ * Headlines without an internal break render whole, in the default ink. No copy is ever
+ * required to have a particular shape for the layout to work.
+ */
+const breakAt = hero.headline.indexOf('. ');
+const headlineLead = breakAt === -1 ? hero.headline : hero.headline.slice(0, breakAt + 1);
+const headlinePayoff = breakAt === -1 ? null : hero.headline.slice(breakAt + 2);
+
+// Objection handling, one line, at the moment of highest intent. Fixed for every arm.
+const assurances = ['No credit card', 'Free plan, forever', '70,000+ traders'];
+
+// Real product coverage, not simulated market data — nothing here is fabricated.
+const coverage = ['FOREX', 'FUTURES', 'INDICES', 'STOCKS', 'CRYPTO'];
 ---
 
 <section class="relative overflow-hidden">
@@ -22,29 +44,97 @@ const { hero, eyebrow } = copy;
   >
   </div>
 
+  <!--
+    Faint chart grid, masked to fade out before it reaches the text. Pure CSS gradients:
+    no image request, no layout cost, and it reads as a trading surface rather than a
+    generic marketing page.
+  -->
+  <div
+    class="pointer-events-none absolute inset-0 opacity-[0.07] [mask-image:radial-gradient(ellipse_70%_55%_at_50%_0%,#000_40%,transparent_100%)]"
+    style="background-image:linear-gradient(#F6F6F6_1px,transparent_1px),linear-gradient(90deg,#F6F6F6_1px,transparent_1px);background-size:64px_64px"
+    aria-hidden="true"
+  >
+  </div>
+
   <div class="relative mx-auto max-w-[1000px] px-4 pb-12 pt-24 text-center sm:px-6">
     <p
-      class="mb-6 inline-block rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-light"
+      class="mb-6 inline-flex items-center gap-2 rounded-full border border-brand/25 bg-brand/10 px-3 py-1 font-mono text-xs font-medium uppercase tracking-[0.2em] text-brand-light"
     >
+      <span class="h-1.5 w-1.5 rounded-full bg-brand-light" aria-hidden="true"></span>
       {eyebrow}
     </p>
 
-    <h1 class="mb-6 text-4xl font-black leading-[1.15] text-ink md:text-6xl">
-      {hero.headline}
+    <h1 class="mb-6 font-display text-4xl font-black leading-[1.12] text-ink md:text-6xl">
+      {headlineLead}{
+        headlinePayoff && (
+          <>
+            {' '}
+            <span class="text-brand-light">{headlinePayoff}</span>
+          </>
+        )
+      }
     </h1>
 
     <p class="mx-auto mb-8 max-w-2xl text-lg leading-relaxed text-ink-muted md:text-xl">
       {hero.subheadline}
     </p>
 
-    <a
-      href={ctaHref}
-      data-analytics-cta="hero"
-      class="inline-block rounded-full bg-brand px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-brand/25 transition-colors hover:bg-brand-hover"
-    >
-      {hero.cta_text}
-    </a>
+    <div class="flex flex-col items-center justify-center gap-3 sm:flex-row sm:gap-4">
+      <a
+        href={ctaHref}
+        data-analytics-cta="hero"
+        class="inline-block w-full rounded-full bg-brand px-8 py-3.5 text-base font-bold text-white shadow-lg shadow-brand/25 transition-colors hover:bg-brand-hover sm:w-auto"
+      >
+        {hero.cta_text}
+      </a>
 
-    <p class="mt-3 text-sm text-ink-subtle">{hero.cta_subtext}</p>
+      <!-- Secondary path for visitors who want proof before a form. Anchors to the
+           interactive simulator already on the page, so it costs nothing to offer. -->
+      <a
+        href="#simulator"
+        data-analytics-cta="hero_secondary"
+        class="inline-flex w-full items-center justify-center gap-2 rounded-full border border-line-strong px-6 py-3.5 text-base font-semibold text-ink-muted transition-colors hover:border-line-strongest hover:text-ink sm:w-auto"
+      >
+        Try the replay first
+        <span aria-hidden="true">↓</span>
+      </a>
+    </div>
+
+    <p class="mt-4 text-sm text-ink-subtle">{hero.cta_subtext}</p>
+
+    <ul class="mt-8 flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+      {
+        assurances.map((item) => (
+          <li class="flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ink-subtle">
+            <svg
+              viewBox="0 0 12 12"
+              class="h-3 w-3 shrink-0 fill-none stroke-success stroke-[2]"
+              aria-hidden="true"
+            >
+              <path d="M2 6.2 4.6 8.8 10 3.4" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+            {item}
+          </li>
+        ))
+      }
+    </ul>
+  </div>
+
+  <!-- Asset coverage band. Product fact, styled like a terminal readout. -->
+  <div class="relative border-y border-line/60 bg-surface-raised/40">
+    <ul
+      class="mx-auto flex max-w-[1000px] flex-wrap items-center justify-center gap-x-8 gap-y-2 px-4 py-3.5 sm:px-6"
+    >
+      {
+        coverage.map((asset) => (
+          <li class="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-ink-subtle">
+            {asset}
+          </li>
+        ))
+      }
+      <li class="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-brand-light">
+        Replayable 24/7
+      </li>
+    </ul>
   </div>
 </section>

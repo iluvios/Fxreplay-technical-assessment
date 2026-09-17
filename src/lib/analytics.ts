@@ -20,6 +20,8 @@ export type GrowthEventName =
 export interface GrowthEventProperties {
   cta_location?:
     | 'hero'
+    /** Secondary hero path — anchors to the simulator rather than to signup. */
+    | 'hero_secondary'
     | 'nav'
     | 'feature_section'
     | 'feature_tabs'

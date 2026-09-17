@@ -109,8 +109,21 @@ To prevent AI hallucination, **all statistical mathematics are computed determin
 #### 1. Minimum Detectable Effect (MDE) Sample Size Check:
 Before testing for significance, the service verifies if the variant has accumulated the minimum required sample size:
 $$n_{\text{min}} = \frac{16 \cdot p \cdot (1 - p)}{\delta^2}$$
-*Where $p = 0.032$ (baseline CR) and $\delta = 0.008$ (detecting an absolute 0.8% lift).*  
+*Where $p = 0.032$ (baseline CR) and $\delta = 0.02$ (detecting an absolute 2.0pp lift).*  
 $\implies$ **Minimum threshold:** $\approx 1,240$ unique visitors per variant.
+
+> **Corrected during implementation.** An earlier draft of this section stated
+> $\delta = 0.008$ alongside the same $n \approx 1{,}240$ conclusion. Those two are
+> inconsistent: $16 \cdot 0.032 \cdot 0.968 / 0.008^2 = 7{,}744$, not $1{,}240$. The
+> $1{,}240$ figure is what $\delta = 0.02$ produces, and $1{,}240$ is the threshold the
+> decision matrix below and `.claude/skills/growth-experiment-analyzer` are written
+> against — so $\delta$ is corrected here rather than the sample size.
+>
+> Stated plainly, so the limitation is not buried: at a 3.2% baseline this test is
+> powered to detect a **+62% relative lift**. Subtler moves will read as underpowered.
+> Detecting a +25% relative lift ($\delta = 0.008$) genuinely does require ~7,700
+> visitors per arm. `evaluateTest()` in `src/lib/stats.ts` accepts an explicit `mde`
+> when that is the question being asked.
 
 #### 2. Two-Tailed Z-Test for Proportions:
 $$\hat{p} = \frac{X_{\text{treatment}} + X_{\text{control}}}{N_{\text{treatment}} + N_{\text{control}}}$$
@@ -159,7 +172,7 @@ The service executes one of three deterministic actions:
 
 | Decision Path | Trigger Conditions | System Execution | Alert Level |
 | :--- | :--- | :--- | :--- |
-| **1. AUTO-PROMOTE**<br>*(Winner Declared)* | • $n \ge 1,200$ per variant<br>• $p < 0.05$ (95% confidence)<br>• Lift $\ge +15\%$ | 1. Updates Neon DB: promotes variant copy to default Control.<br>2. Updates status to `WINNER_PROMOTED`.<br>3. Posts celebratory report to Discord/Slack. | 🟢 High Priority (Win) |
+| **1. AUTO-PROMOTE**<br>*(Winner Declared)* | • $n \ge 1,240$ per variant<br>• $p < 0.05$ (95% confidence)<br>• Lift $\ge +15\%$ | 1. Updates Neon DB: promotes variant copy to default Control.<br>2. Updates status to `WINNER_PROMOTED`.<br>3. Posts celebratory report to Discord/Slack. | 🟢 High Priority (Win) |
 | **2. AUTO-KILL**<br>*(Circuit Breaker)* | • $n \ge 500$ visitors<br>• Lift $\le -25\%$ vs. control<br>• High statistical certainty | 1. **Stops ad budget waste:** Sets `active = FALSE` on variant in Neon DB.<br>2. All subsequent traffic for that `?lp=` reverts to Control.<br>3. Dispatches incident alert with post-mortem diagnostic. | 🔴 Critical (Ad Spend Safeguard) |
 | **3. HUMAN REVIEW**<br>*(Inconclusive)* | • Sample size not yet reached<br>• $0.05 \le p \le 0.15$<br>• High variance across device types | 1. Keeps variant running.<br>2. Sends synthesized briefing to growth engineer with 2 action buttons:<br>&nbsp;&nbsp;`[Extend 48h (Need ~340 visits)]`<br>&nbsp;&nbsp;`[Kill & Iterate Copy]` | 🟡 Information / Action Needed |
 

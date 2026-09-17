@@ -188,13 +188,19 @@ export async function evaluateExperiment(params: {
   // A fixture replaces the measured counts so the decision matrix can be exercised
   // end-to-end without waiting for real traffic. Guarded to dry runs by the caller,
   // and marked as measured only so the gating logic runs — nothing is ever written.
-  if (fixture && metrics.control && metrics.treatments[0]) {
+  // Applied to the first arm actually taking traffic — a retired arm is excluded from
+  // scoring, so loading a fixture into one would produce a run with nothing to decide.
+  const fixtureTarget = metrics.treatments.find((arm) => arm.variant.active);
+
+  if (fixture && metrics.control && fixtureTarget) {
     metrics.control.visitors = fixture.control.visitors;
     metrics.control.signups = fixture.control.signups;
-    metrics.treatments[0].visitors = fixture.variant.visitors;
-    metrics.treatments[0].signups = fixture.variant.signups;
+    fixtureTarget.visitors = fixture.variant.visitors;
+    fixtureTarget.signups = fixture.variant.signups;
     metrics.source = 'posthog';
-    metrics.notes.push('SYNTHETIC FIXTURE — counts were supplied, not measured.');
+    metrics.notes.push(
+      `SYNTHETIC FIXTURE — counts were supplied, not measured (applied to "${fixtureTarget.variant.variant_name}").`
+    );
   }
 
   const verdict = judgeExperiment(metrics);

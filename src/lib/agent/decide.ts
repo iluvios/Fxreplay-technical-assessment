@@ -35,6 +35,28 @@ export const RULES = {
   REVIEW_P_BAND: [0.05, 0.15] as const,
 } as const;
 
+/**
+ * Šidák-corrected significance threshold for `k` simultaneous comparisons.
+ *
+ *   α_adjusted = 1 - (1 - α)^(1/k)
+ *
+ * Each experiment runs three treatment arms against one control, which is three chances
+ * for an arm to clear p < 0.05 by luck alone — about a 14% probability that at least one
+ * does when none of them actually works. Promoting on an uncorrected p-value would mean
+ * roughly one in seven "winners" is noise, permanently replacing the control.
+ *
+ * At k = 3 this tightens the promote gate from 0.05 to ≈0.017.
+ *
+ * Applied to the promote gate only, deliberately. Correcting the kill gate too would
+ * make the circuit breaker slower, and the asymmetry runs the other way there: a false
+ * kill costs a little learning and reverses in one click, while a variant genuinely
+ * losing 25% keeps spending budget every hour it stays live.
+ */
+export function sidakThreshold(alpha: number, comparisons: number): number {
+  if (comparisons <= 1) return alpha;
+  return 1 - Math.pow(1 - alpha, 1 / comparisons);
+}
+
 export interface ArmVerdict {
   arm: ArmMetrics;
   test: TestResult;
@@ -85,8 +107,11 @@ function judgeArm(params: {
   arm: ArmMetrics;
   baselineCr: number | null;
   actionable: boolean;
+  /** Number of treatment arms in this experiment, for the multiple-comparison correction. */
+  comparisons: number;
 }): ArmVerdict {
-  const { control, arm, baselineCr, actionable } = params;
+  const { control, arm, baselineCr, actionable, comparisons } = params;
+  const promoteMaxP = sidakThreshold(RULES.PROMOTE_MAX_P, comparisons);
 
   const test = evaluateTest({
     control: { visitors: control.visitors, conversions: control.signups },
@@ -138,9 +163,8 @@ function judgeArm(params: {
   // ── Winner ─────────────────────────────────────────────────────────────────
   if (
     !test.is_underpowered &&
-    test.is_significant &&
     p !== null &&
-    p < RULES.PROMOTE_MAX_P &&
+    p < promoteMaxP &&
     lift !== null &&
     lift >= RULES.PROMOTE_MIN_LIFT_PCT
   ) {
@@ -150,8 +174,36 @@ function judgeArm(params: {
       decision: 'PROMOTE',
       rationale:
         `Winner: ${summary}. Both arms exceed the ${test.sample_target} visitor ` +
-        `sample target, the result is significant at 95% (p<${RULES.PROMOTE_MAX_P}), ` +
-        `and the lift clears the ${RULES.PROMOTE_MIN_LIFT_PCT}% promotion bar.`,
+        `sample target, the lift clears the ${RULES.PROMOTE_MIN_LIFT_PCT}% promotion bar, ` +
+        `and p is below ${promoteMaxP.toFixed(4)}` +
+        (comparisons > 1
+          ? ` — the 0.05 threshold Šidák-corrected for ${comparisons} competing arms.`
+          : ' (95% confidence).'),
+    };
+  }
+
+  // ── Would have won a two-arm test ──────────────────────────────────────────
+  // Clears the lift bar and the ordinary 0.05 threshold, but not the corrected one.
+  // Auto-promoting would spend the multiple-comparison budget the correction exists to
+  // protect; silently continuing would bury a result someone should look at. So it goes
+  // to a human, who can extend the run or drop the weaker arms and let it resolve.
+  if (
+    !test.is_underpowered &&
+    p !== null &&
+    p < RULES.PROMOTE_MAX_P &&
+    lift !== null &&
+    lift >= RULES.PROMOTE_MIN_LIFT_PCT
+  ) {
+    return {
+      arm,
+      test,
+      decision: 'HUMAN_REVIEW',
+      rationale:
+        `Promising but not yet decisive across ${comparisons} arms: ${summary}. ` +
+        `This clears the ${RULES.PROMOTE_MIN_LIFT_PCT}% lift bar and ordinary 95% ` +
+        `significance, but not the ${promoteMaxP.toFixed(4)} threshold required when ` +
+        `${comparisons} arms compete for the same win. Extend the run, or retire the ` +
+        `weaker arms and let this one resolve against control alone.`,
     };
   }
 
@@ -223,10 +275,12 @@ const PRIORITY: Record<Decision, number> = {
 /**
  * Score every treatment arm and pick the one the run is about.
  *
- * Multi-arm tests would need a multiple-comparison correction before any of these
- * p-values could be trusted jointly; the registry runs two-arm tests precisely to
- * avoid that. When more arms are present the arms are still all scored, but only the
- * highest-priority one drives an action.
+ * Every arm is scored, but only the highest-priority one drives an action — a single run
+ * never promotes two arms or promotes one while killing another.
+ *
+ * The p-values are corrected for the number of competing arms (see `sidakThreshold`),
+ * so a three-arm experiment is held to a stricter bar than a two-arm one rather than
+ * getting three free chances at the same threshold.
  */
 export function judgeExperiment(metrics: ExperimentMetrics): ExperimentVerdict {
   const { control, treatments } = metrics;
@@ -241,24 +295,35 @@ export function judgeExperiment(metrics: ExperimentMetrics): ExperimentVerdict {
     };
   }
 
-  if (treatments.length === 0) {
+  // Only arms currently taking traffic are scored. A deactivated arm — retired by hand,
+  // or killed by an earlier run — cannot accumulate new data, so re-judging it would at
+  // best repeat a decision already taken and at worst let a stale arm win an experiment
+  // it is no longer part of. It also must not inflate the multiple-comparison count,
+  // which should reflect how many messages are genuinely competing right now.
+  const liveTreatments = treatments.filter((arm) => arm.variant.active);
+
+  if (liveTreatments.length === 0) {
     return {
       metrics,
       primary: null,
       arms: [],
       actionable: false,
-      blocked_reason: 'Experiment has no treatment arms.',
+      blocked_reason:
+        treatments.length === 0
+          ? 'Experiment has no treatment arms.'
+          : 'Every treatment arm is deactivated, so all traffic is already served the control.',
     };
   }
 
   const actionable = metrics.source === 'posthog';
 
-  const arms = treatments.map((arm) =>
+  const arms = liveTreatments.map((arm) =>
     judgeArm({
       control,
       arm,
       baselineCr: metrics.experiment.baseline_cr,
       actionable,
+      comparisons: liveTreatments.length,
     })
   );
 

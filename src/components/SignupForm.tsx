@@ -140,7 +140,7 @@ export default function SignupForm({ lp, submitLabel, variantId, experimentId }:
   if (status === 'success') {
     return (
       <div
-        className="rounded-2xl border border-success-dark bg-surface-raised p-8 text-center"
+        className="rounded-2xl border border-success-dark bg-surface-raised p-8 text-center shadow-2xl shadow-black/40"
         role="status"
       >
         <div className="mx-auto mb-5 flex h-12 w-12 items-center justify-center rounded-full bg-success/15">
@@ -170,8 +170,13 @@ export default function SignupForm({ lp, submitLabel, variantId, experimentId }:
       onSubmit={handleSubmit}
       onFocusCapture={handleFirstInteraction}
       noValidate
-      className="rounded-2xl border border-line bg-surface-raised p-6 sm:p-8"
+      className="rounded-2xl border border-line-strong bg-surface-raised p-6 shadow-2xl shadow-black/40 sm:p-8"
     >
+      <div className="mb-6">
+        <h2 className="font-display text-xl font-black text-ink">Create your free account</h2>
+        <p className="mt-1 text-sm text-ink-subtle">Takes about thirty seconds.</p>
+      </div>
+
       {errors.form && (
         <div
           role="alert"
@@ -220,7 +225,7 @@ export default function SignupForm({ lp, submitLabel, variantId, experimentId }:
             name="icp_focus"
             defaultValue="general"
             disabled={isSubmitting}
-            className="w-full rounded-lg border border-line bg-surface-inset px-3.5 py-2.5 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand disabled:opacity-60"
+            className="w-full rounded-xl border border-line-strong bg-surface-inset px-4 py-3 text-sm text-ink outline-none transition-colors focus:border-brand focus:ring-1 focus:ring-brand disabled:opacity-60"
           >
             {TRADING_GOALS.map((goal) => (
               <option key={goal.value} value={goal.value}>
@@ -277,10 +282,10 @@ function Field({ id, label, type, autoComplete, placeholder, error, disabled }: 
         disabled={disabled}
         aria-invalid={error ? true : undefined}
         aria-describedby={error ? errorId : undefined}
-        className={`w-full rounded-lg border bg-surface-inset px-3.5 py-2.5 text-sm text-ink placeholder:text-ink-subtle outline-none transition-colors focus:ring-1 disabled:opacity-60 ${
+        className={`w-full rounded-xl border bg-surface-inset px-4 py-3 text-sm text-ink placeholder:text-ink-subtle outline-none transition-colors focus:ring-1 disabled:opacity-60 ${
           error
             ? 'border-error focus:border-error focus:ring-error'
-            : 'border-line focus:border-brand focus:ring-brand'
+            : 'border-line-strong focus:border-brand focus:ring-brand'
         }`}
       />
       {error && (
