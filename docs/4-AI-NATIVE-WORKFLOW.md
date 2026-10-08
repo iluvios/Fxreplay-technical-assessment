@@ -1,6 +1,6 @@
 # Deliverable 4: AI-Native Growth Engineering Workflow
 
-**FX Replay Growth Engineering Technical Assessment**
+**Acme Backtest Growth Engineering Technical Assessment**
 
 Everything described here is committed and runnable. File paths are links to real files;
 commands are commands that work. Where something is a proposal rather than an

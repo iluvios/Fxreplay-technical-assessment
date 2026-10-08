@@ -23,7 +23,7 @@ const CHART_THEME = {
   background: '#030303', // surface        (bg-primary  → dark-900)
   grid: '#1A1A1A', //       line           (border-primary → dark-700)
   axisText: '#888888', //   ink-subtle     (text-disabled  → neutral-400)
-  crosshair: '#0260FD', //  brand          (border-brand   → blue-600)
+  crosshair: '#7C3AED', //  brand          (brand → violet-600)
   up: '#53B483', //         success
   down: '#CD3636', //       error
 } as const;
@@ -192,7 +192,7 @@ export default function ChartSimulator() {
       {/* Replay header bar */}
       <div className="flex items-center justify-between gap-3 border-b border-line bg-surface-raised px-4 py-2.5 text-xs text-ink-muted">
         <div className="flex items-center gap-3">
-          <span className="font-display font-black tracking-wider text-ink">FX REPL▶Y</span>
+          <span className="font-display font-black tracking-wider text-ink">ACME <span className="text-brand-light">BACKTEST</span></span>
           <span className="rounded bg-surface-inset px-2 py-0.5 font-mono text-ink">EURUSD • 1H</span>
           <span className={`font-mono ${isUp ? 'text-success' : 'text-error'}`}>
             {current ? current.close.toFixed(5) : '—'} ({isUp ? '+' : ''}

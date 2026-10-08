@@ -1,4 +1,4 @@
-# FX Replay Growth Engine: Database Architecture & Schema Specification
+# Acme Backtest Growth Engine: Database Architecture & Schema Specification
 **Target Database:** Neon PostgreSQL (Serverless, Branching-ready)  
 **Schema Version:** 1.0.0  
 **Integration Surfaces:** `/freetrial?lp=X`, `/marketingengine`, `/api/users`, PostHog Webhooks

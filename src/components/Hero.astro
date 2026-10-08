@@ -11,7 +11,7 @@
 // (docs/EXPERIMENT_VARIANTS_COPY.md "Hero Visual") — it lives on the ICP base, so every arm
 // of one experiment shows the same one.
 import type { ExperimentVariantCopy, HeroVariables } from '../lib/copy-dictionary';
-import { HERO_VISUAL_BY_TYPE } from '../lib/copy-dictionary';
+import ProductMockup from './ProductMockup.astro';
 
 interface Props {
   copy: ExperimentVariantCopy;
@@ -36,9 +36,9 @@ const headlineLead = breakAt === -1 ? hero.headline : hero.headline.slice(0, bre
 const headlinePayoff = breakAt === -1 ? null : hero.headline.slice(breakAt + 2);
 
 // Objection handling, one line, at the moment of highest intent. Fixed for every arm.
-const assurances = ['No credit card', '5-day free trial', '1M+ traders'];
+const assurances = ['No credit card', '5-day free trial', 'Cancel anytime'];
 
-// Window title for the product surface — the mockup names from docs/IMAGE_ASSETS_CATALOG.md §3.
+// Window title for the product surface.
 const WINDOW_LABEL: Record<HeroVariables['hero_image_type'], string> = {
   standard_chart: 'Replay mode',
   prop_firm_overlay: 'Prop firm simulator',
@@ -46,23 +46,16 @@ const WINDOW_LABEL: Record<HeroVariables['hero_image_type'], string> = {
   multi_timeframe: 'Multipair & multichart',
 };
 
-const visualSrc = HERO_VISUAL_BY_TYPE[hero.hero_image_type];
 const visualLabel = WINDOW_LABEL[hero.hero_image_type];
 
-// The mockups are exported at 428×388. Fixed dimensions + a matching aspect-ratio box on
-// the frame mean the layout is settled before the SVG arrives.
-const VISUAL_W = 428;
-const VISUAL_H = 388;
-
-// The mockups weigh 150–490 KB. Below lg the window is not rendered, so viewports under
-// 1024px are served this 1×1 transparent GIF instead and never download the SVG.
-const BLANK_PIXEL = 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==';
+// The product surface is drawn inline (ProductMockup) at a fixed 428×388 viewBox, so the
+// aspect-ratio box below is settled on first paint and there is no image request.
 
 // One product fact floated over the frame. The first pillar is held constant per ICP.
 const floatingFact = copy.pillars[0]?.title;
 
 // Market tape: the same coverage facts AssetCoverage.astro renders, plus the tickers the
-// asset catalogue lists (docs/IMAGE_ASSETS_CATALOG.md §6). Nothing here is simulated.
+// asset grid lists.
 type TapeItem =
   | { kind: 'class'; label: string }
   | { kind: 'symbol'; symbol: string; since?: string };
@@ -205,7 +198,7 @@ const TAPE: TapeItem[] = [
                 <span class="h-2.5 w-2.5 rounded-full bg-line-strongest"></span>
               </span>
               <span class="font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-ink-subtle">
-                FX Replay <span class="text-line-strongest">/</span> {visualLabel}
+                Acme Backtest <span class="text-line-strongest">/</span> {visualLabel}
               </span>
             </div>
             <span
@@ -217,19 +210,7 @@ const TAPE: TapeItem[] = [
           </div>
 
           <div class="relative aspect-[428/388] bg-surface">
-            <picture>
-              <source media="(max-width: 1023px)" srcset={BLANK_PIXEL} />
-              <img
-                src={visualSrc}
-                alt={`${visualLabel} — FX Replay`}
-                width={VISUAL_W}
-                height={VISUAL_H}
-                loading="eager"
-                fetchpriority="high"
-                decoding="async"
-                class="block h-full w-full object-cover"
-              />
-            </picture>
+            <ProductMockup variant={hero.hero_image_type} label={visualLabel} />
             <!-- Replay head: a thin brand line sweeping the width, the product's core mechanic. -->
             <div class="hero-progress absolute bottom-0 left-0 h-0.5 bg-brand" aria-hidden="true"></div>
           </div>

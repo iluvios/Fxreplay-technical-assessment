@@ -1,4 +1,4 @@
-# FX Replay: Autonomous Experiment Evaluation Service
+# Acme Backtest: Autonomous Experiment Evaluation Service
 **System Architecture & Operational Specification**  
 **Component:** Automated Metric Sync, Statistical Gating, AI Diagnosis & Autonomous Decision Triage  
 **Execution Runtime:** Vercel Serverless / Node.js Headless Cron + PostHog REST API + Neon PostgreSQL
@@ -142,7 +142,7 @@ Once the mathematical stats are calculated, they are formatted alongside the qua
 
 #### The AI Prompt Template:
 ```markdown
-You are the FX Replay Growth Intelligence Agent. 
+You are the Acme Backtest Growth Intelligence Agent. 
 Analyze the following experiment performance metrics against the defined ICP profile.
 
 [ICP CONTEXT]:
@@ -218,8 +218,8 @@ The service formats rich markdown reports and dispatches them via Webhook (Slack
   },
   "ai_diagnosis": "Strong weekend performance (+31% on Saturday/Sunday), but diluted by weekday visitors. Currently at 91.6% confidence—short of the 95% threshold.",
   "recommended_actions": [
-    { "label": "Extend 48 Hours", "action_url": "https://fxreplay.com/api/engine/action?action=extend&exp_id=exp_weekend_compression" },
-    { "label": "Kill & Rewrite", "action_url": "https://fxreplay.com/api/engine/action?action=kill&exp_id=exp_weekend_compression" }
+    { "label": "Extend 48 Hours", "action_url": "https://acme-backtest.example/api/engine/action?action=extend&exp_id=exp_weekend_compression" },
+    { "label": "Kill & Rewrite", "action_url": "https://acme-backtest.example/api/engine/action?action=kill&exp_id=exp_weekend_compression" }
   ]
 }
 ```
@@ -258,4 +258,4 @@ In response to the architectural inquiry:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-This dual structure provides the ultimate demonstration of engineering maturity for the FX Replay technical evaluation: **headless reliability for automated tasks, and conversational MCP tools for human-agent creative leverage.**
+This dual structure provides the ultimate demonstration of engineering maturity for the Acme Backtest technical evaluation: **headless reliability for automated tasks, and conversational MCP tools for human-agent creative leverage.**

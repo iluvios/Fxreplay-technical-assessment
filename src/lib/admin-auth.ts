@@ -20,7 +20,7 @@ export const ADMIN_COOKIE = 'fxr_admin';
 export const ADMIN_USER = process.env.ADMIN_USER ?? import.meta.env.ADMIN_USER ?? 'admin';
 
 export const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD ?? import.meta.env.ADMIN_PASSWORD ?? 'fxreplay';
+  process.env.ADMIN_PASSWORD ?? import.meta.env.ADMIN_PASSWORD ?? 'acme-demo';
 
 const SESSION_MAX_AGE = 60 * 60 * 8; // one working day
 

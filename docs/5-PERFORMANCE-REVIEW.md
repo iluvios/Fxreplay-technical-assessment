@@ -1,5 +1,5 @@
 # Deliverable 5: Web Performance, SEO & Production Readiness Review
-**FX Replay Growth Marketing Engine**  
+**Acme Backtest Growth Marketing Engine**  
 **Runtime:** Astro 5 SSR via `@astrojs/vercel` (Islands Architecture)  
 **Target Scores:** Lighthouse Performance: 98–100 | Accessibility: 100 | Best Practices: 100 | SEO: 100
 
@@ -62,7 +62,7 @@ In growth engineering, performance directly governs conversion rate and ad spend
     `Cache-Control: private, no-store`
   * **Why Shared Caching is Prohibited:** A shared edge cache would pin all subsequent visitors to whichever experiment arm rendered first, silently collapsing the randomized A/B traffic distribution. By keeping rendering server-side with `private, no-store`, Vercel Serverless functions resolve each visitor's sticky cookie and query parameters in <20ms while strictly maintaining randomized experimental integrity.
 * **Asset Optimization:**
-  * Vector graphics (`FXReplayLogo.svg`, isotype SVGs) are inlined or served directly via SVG, eliminating multi-megabyte PNG downloads.
+  * Vector graphics (`AcmeBacktestLogo.svg`, isotype SVGs) are inlined or served directly via SVG, eliminating multi-megabyte PNG downloads.
   * Charts use HTML5 Canvas via `lightweight-charts` (~45 KB total bundle) instead of heavy DOM nodes.
 
 ---
@@ -79,14 +79,14 @@ Even though `/freetrial` serves paid and direct experiment traffic, technical SE
 ### B. Canonicalization & Anti-Duplication
 * Because multiple experiment URLs exist (`/freetrial`, `/freetrial?lp=1`, `/freetrial?lp=2`), every page specifies a clean canonical tag:
   ```html
-  <link rel="canonical" href="https://fxreplay.com/freetrial" />
+  <link rel="canonical" href="https://acme-backtest.example/freetrial" />
   ```
   This prevents search engines from penalizing the domain for duplicate content across experiment variants.
 
 ### C. JSON-LD Structured Data
 The page embeds schema.org structured data directly into `<head>`:
-* **`SoftwareApplication`:** Identifies FX Replay as an educational trading simulator with pricing offers ($0 Free, $17.99 Intermediate, $35 Pro).
-* **`FAQPage` Schema:** Enables rich snippets in Google search results for key platform questions ("What is FX Replay?", "Is FX Replay free?").
+* **`SoftwareApplication`:** Identifies Acme Backtest as an educational trading simulator with pricing offers ($0 Free, $17.99 Intermediate, $35 Pro).
+* **`FAQPage` Schema:** Enables rich snippets in Google search results for key platform questions ("What is Acme Backtest?", "Is Acme Backtest free?").
 * **`Organization` Schema:** Links official social profiles (Twitter, YouTube, Discord, Trustpilot).
 
 ---
@@ -95,7 +95,7 @@ The page embeds schema.org structured data directly into `<head>`:
 
 Accessibility is treated as a core growth driver—accessible forms convert better for everyone.
 
-* **Contrast Ratios:** Secondary body text (`#D1D1D1`, `text-ink-muted`) on the brand ground (`#030303`, `bg-surface`) achieves roughly $13:1$, exceeding the WCAG AAA standard of 7:1. Brand buttons (`#0260FD`, `bg-brand`) with white label text achieve roughly $5.1:1$, exceeding WCAG AA (4.5:1).
+* **Contrast Ratios:** Secondary body text (`#D1D1D1`, `text-ink-muted`) on the brand ground (`#030303`, `bg-surface`) achieves roughly $13:1$, exceeding the WCAG AAA standard of 7:1. Brand buttons (`#7C3AED`, `bg-brand`) with white label text achieve roughly $5.7:1$, exceeding WCAG AA (4.5:1).
 * **Keyboard Navigation:**
   * Signup is a dedicated page (`/signup?lp=X`), not a modal — so there is no focus trap to manage and browser back/forward works normally.
   * The CSS-only feature tabs are real radio inputs, so they are keyboard-operable by default and expose a visible `:focus-visible` outline.

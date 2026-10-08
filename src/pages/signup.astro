@@ -7,6 +7,7 @@
 // be changed by editing the query string.
 import Layout from '../layouts/Layout.astro';
 import SignupForm from '../components/SignupForm';
+import Logo from '../components/Logo.astro';
 import { resolveLiveExperience } from '../lib/experiment-repo';
 import { getOrCreateVisitorId, rememberEnrolment } from '../lib/visitor';
 import { getOrCreateAttribution } from '../lib/attribution';
@@ -28,9 +29,6 @@ const { copy, assignment } = await resolveLiveExperience({
 });
 
 rememberEnrolment(Astro.cookies, assignment);
-
-const LOGO_URL =
-  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a02920e2b4fe38ee5a3a06a_fxreplay-logo.svg';
 
 // Reassurance at the point of commitment. Each line answers an unspoken objection:
 // what will it cost, is the data real, do I have to do the boring part, can I leave.
@@ -55,7 +53,7 @@ const reinforcement = copy.pillars.slice(0, 2);
 const review = copy.reviews[0];
 ---
 
-<Layout title={`${copy.modal.title} | FX Replay`} description={copy.modal.subtitle}>
+<Layout title={`${copy.modal.title} | Acme Backtest`} description={copy.modal.subtitle}>
   <div
     data-signup-root
     data-variant-id={copy.variant_id}
@@ -77,8 +75,8 @@ const review = copy.reviews[0];
 
     <header class="relative border-b border-line/60">
       <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
-        <a href="/" class="transition-opacity hover:opacity-80" aria-label="FX Replay home">
-          <img src={LOGO_URL} alt="FX Replay" width="120" height="26" class="h-6 w-auto" />
+        <a href="/" class="transition-opacity hover:opacity-80" aria-label="Acme Backtest home">
+          <Logo class="h-6" />
         </a>
         <a
           href="/"

@@ -2,6 +2,7 @@
 // Feature tabs — docs/FRONTEND_BUILD_SPEC.md §3.4
 // Zero client JS: tab switching is a pure CSS radio-input pattern.
 import type { ExperimentVariantCopy } from '../lib/copy-dictionary';
+import ProductMockup, { type MockupVariant } from './ProductMockup.astro';
 
 interface Props {
   copy: ExperimentVariantCopy;
@@ -13,16 +14,15 @@ const { copy, ctaHref } = Astro.props;
 
 // Baseline tab content. Every string is sourced from docs/EXPERIMENT_VARIANTS_COPY.md
 // (control "Key Features List" + the variant whose active tab is that surface).
-const TABS = [
+const TABS: { id: string; label: string; title: string; description: string; cta_text: string; mockup: MockupVariant }[] = [
   {
     id: 'ft-0',
-    label: 'FXR Journal',
+    label: 'Journal',
     title: 'Track every move',
     description:
       'Backtest using historical data and see how your setups perform with zero risk and no emotional bias.',
     cta_text: 'Start now',
-    image:
-      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d922b717860926108d39_journal%20-%20desktop.svg',
+    mockup: 'journal',
   },
   {
     id: 'ft-1',
@@ -31,28 +31,25 @@ const TABS = [
     description:
       'Simulate prop firm challenges with real rules and conditions to prepare for funded accounts.',
     cta_text: 'Start prop simulation',
-    image:
-      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d94bfd5c98e00ccfcddb_prop%20firm%20-%20desktop.svg',
+    mockup: 'prop_firm_overlay',
   },
   {
     id: 'ft-2',
-    label: 'Mentor AI',
+    label: 'AI Coach',
     title: 'Get feedback on every session',
     description:
       'Get AI-powered feedback on your trading behavior to identify patterns and improve performance.',
     cta_text: 'Start now',
-    image:
-      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d92af9c7c1567ee36ef6_mentor%20ai%20-%20desktop.svg',
+    mockup: 'coach',
   },
   {
     id: 'ft-3',
-    label: 'FXR Script',
+    label: 'Strategy Script',
     title: 'Zero lookahead leaks. Sub-second tick accuracy.',
     description:
       'Switch from the Daily to the 1-minute chart without flashing future price action. Backtest with the mathematical integrity TradingView lacks.',
     cta_text: 'Test tick precision',
-    image:
-      'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d94270b51704a534fee8_fxr%20script%20-%20desktop.svg',
+    mockup: 'script',
   },
 ];
 
@@ -81,15 +78,15 @@ const tabs = TABS.map((tab, i) =>
 ---
 
 <section id="features" class="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
-  <div class="fxr-tabs">
-    <input type="radio" name="fxr-feature-tab" id="ft-0" checked={activeIndex === 0} />
-    <input type="radio" name="fxr-feature-tab" id="ft-1" checked={activeIndex === 1} />
-    <input type="radio" name="fxr-feature-tab" id="ft-2" checked={activeIndex === 2} />
-    <input type="radio" name="fxr-feature-tab" id="ft-3" checked={activeIndex === 3} />
+  <div class="ft-tabs">
+    <input type="radio" name="ft-feature-tab" id="ft-0" checked={activeIndex === 0} />
+    <input type="radio" name="ft-feature-tab" id="ft-1" checked={activeIndex === 1} />
+    <input type="radio" name="ft-feature-tab" id="ft-2" checked={activeIndex === 2} />
+    <input type="radio" name="ft-feature-tab" id="ft-3" checked={activeIndex === 3} />
 
     <!-- Tab switcher -->
     <div
-      class="fxr-tablist mx-auto mb-10 flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-full border border-line bg-surface-raised p-1.5"
+      class="ft-tablist mx-auto mb-10 flex w-fit max-w-full flex-wrap justify-center gap-1 rounded-full border border-line bg-surface-raised p-1.5"
       role="tablist"
     >
       {
@@ -105,11 +102,11 @@ const tabs = TABS.map((tab, i) =>
     </div>
 
     <!-- Panels -->
-    <div class="fxr-panels">
+    <div class="ft-panels">
       {
         tabs.map((tab) => (
           <div
-            class="fxr-panel items-center gap-10 rounded-2xl border border-line bg-surface-raised p-6 md:p-10 lg:grid-cols-2"
+            class="ft-panel items-center gap-10 rounded-2xl border border-line bg-surface-raised p-6 md:p-10 lg:grid-cols-2"
             data-panel={tab.id}
           >
             <div>
@@ -124,15 +121,7 @@ const tabs = TABS.map((tab, i) =>
               </a>
             </div>
             <div class="overflow-hidden rounded-xl border border-line bg-surface-inset">
-              <img
-                src={tab.image}
-                alt={`${tab.label} preview`}
-                loading="lazy"
-                decoding="async"
-                width="720"
-                height="460"
-                class="h-auto w-full"
-              />
+              <ProductMockup variant={tab.mockup} label={tab.label} />
             </div>
           </div>
         ))
@@ -142,35 +131,35 @@ const tabs = TABS.map((tab, i) =>
 </section>
 
 <style>
-  .fxr-tabs > input[type='radio'] {
+  .ft-tabs > input[type='radio'] {
     position: absolute;
     opacity: 0;
     pointer-events: none;
   }
 
-  .fxr-panel {
+  .ft-panel {
     display: none;
   }
 
   /* Active panel */
-  #ft-0:checked ~ .fxr-panels .fxr-panel[data-panel='ft-0'],
-  #ft-1:checked ~ .fxr-panels .fxr-panel[data-panel='ft-1'],
-  #ft-2:checked ~ .fxr-panels .fxr-panel[data-panel='ft-2'],
-  #ft-3:checked ~ .fxr-panels .fxr-panel[data-panel='ft-3'] {
+  #ft-0:checked ~ .ft-panels .ft-panel[data-panel='ft-0'],
+  #ft-1:checked ~ .ft-panels .ft-panel[data-panel='ft-1'],
+  #ft-2:checked ~ .ft-panels .ft-panel[data-panel='ft-2'],
+  #ft-3:checked ~ .ft-panels .ft-panel[data-panel='ft-3'] {
     display: grid;
   }
 
   /* Active tab pill */
-  #ft-0:checked ~ .fxr-tablist label[for='ft-0'],
-  #ft-1:checked ~ .fxr-tablist label[for='ft-1'],
-  #ft-2:checked ~ .fxr-tablist label[for='ft-2'],
-  #ft-3:checked ~ .fxr-tablist label[for='ft-3'] {
+  #ft-0:checked ~ .ft-tablist label[for='ft-0'],
+  #ft-1:checked ~ .ft-tablist label[for='ft-1'],
+  #ft-2:checked ~ .ft-tablist label[for='ft-2'],
+  #ft-3:checked ~ .ft-tablist label[for='ft-3'] {
     background-color: theme('colors.surface.inset');
     color: theme('colors.ink.DEFAULT');
   }
 
   /* Keyboard focus parity with mouse users */
-  .fxr-tabs > input[type='radio']:focus-visible ~ .fxr-tablist label {
+  .ft-tabs > input[type='radio']:focus-visible ~ .ft-tablist label {
     outline: 2px solid theme('colors.brand.DEFAULT');
     outline-offset: 2px;
   }

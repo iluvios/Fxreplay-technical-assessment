@@ -1,6 +1,6 @@
 # Deliverable 2: Analytics & Measurement Plan
-**FX Replay Growth Marketing Engine**  
-**Core Objective:** Maximize visitor-to-account conversion for "Try FX Replay Free"  
+**Acme Backtest Growth Marketing Engine**  
+**Core Objective:** Maximize visitor-to-account conversion for "Try Acme Backtest Free"  
 **Tooling & Architecture:** PostHog (Client-side SDK + Edge Reverse Proxy + Server Telemetry) + Neon PostgreSQL
 
 ---
@@ -106,7 +106,7 @@ Data quality issues are the silent killer of growth experiments. We implement fi
   ```javascript
   // Rewrites /ingest/* directly to us.i.posthog.com
   ```
-  All telemetry flows through `fxreplay.com/ingest`, completely bypassing adblockers and guaranteeing 100% analytics capture.
+  All telemetry flows through `acme-backtest.example/ingest`, completely bypassing adblockers and guaranteeing 100% analytics capture.
 
 ### 5. Deduplication & Idempotency
 * Every user signup generation passes a unique `idempotency_key` (UUID v4) generated on form load. If a user double-clicks the submit button, only one database row and one `user_created` event is fired.

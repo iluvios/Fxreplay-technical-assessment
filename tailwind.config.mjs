@@ -1,12 +1,9 @@
 /**
- * FX Replay design tokens — single source of truth for the UI palette.
+ * Acme Backtest design tokens — single source of truth for the UI palette.
  *
- * Values are transcribed from the official brand kit:
- *   docs/FX_Replay_Brand_Kit/Brand Kit/brand-kit.html  (PRIM primitives + SEM semantic tokens)
- *
- * The kit's `tokens/tokens.css` was not included in the delivered archive, so the
- * semantic layer is reproduced here. Each entry below names the semantic token it
- * implements and the primitive it resolves to — do not introduce raw hex elsewhere.
+ * "Acme Backtest" is a fictional brand for this demo. Token names follow a
+ * semantic layer (brand / surface / line / ink / system) so components never
+ * reference raw hex — change a value here and the whole UI follows.
  *
  * @type {import('tailwindcss').Config}
  */
@@ -17,10 +14,10 @@ export default {
       colors: {
         // ── Brand ────────────────────────────────────────────────────────────
         brand: {
-          DEFAULT: '#0260FD', // btn-bg-primary-active / text-brand / border-brand → blue-600
-          hover: '#01307F', //   btn-bg-primary-hover                              → blue-800
-          pressed: '#012054', // btn-bg-primary-pressed                            → blue-900
-          light: '#2C7BFD', //   btn-text-minimal-hover / accents                  → blue-500
+          DEFAULT: '#7C3AED', // primary CTA, active states → violet-600
+          hover: '#6D28D9', //   primary hover → violet-700
+          pressed: '#5B21B6', // primary pressed → violet-800
+          light: '#A78BFA', //   accent text on dark ground → violet-400
         },
 
         // ── Surfaces ─────────────────────────────────────────────────────────

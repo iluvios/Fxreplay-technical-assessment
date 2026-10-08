@@ -142,13 +142,13 @@ const PROP_BASE: IcpBase = {
       role: 'Funded Trader',
       credential: '$200k account',
       quote:
-        'I failed three evaluations in a row on the daily drawdown rule, not on my strategy. Two weeks practising position sizing under the same rules in FX Replay and I passed both phases on the next attempt.',
+        'I failed three evaluations in a row on the daily drawdown rule, not on my strategy. Two weeks practising position sizing under the same rules in Acme Backtest and I passed both phases on the next attempt.',
       verified: false,
     },
     {
       name: 'Sarah T.',
       role: 'Funded Futures Trader',
-      credential: 'Apex Evaluation Taker',
+      credential: 'Evaluation Taker',
       quote:
         'It calculates trailing drawdown the same way the firms do. That one detail is what I was getting wrong, and I had no way to see it until I could watch it move in real time.',
       verified: false,
@@ -298,7 +298,7 @@ const PRECISION_BASE: IcpBase = {
 
 export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
   // ── CONTROL ────────────────────────────────────────────────────────────────
-  // The current fxreplay.com baseline. Shared control for all three experiments:
+  // The generic baseline page. Shared control for all three experiments:
   // every test asks the same question — does speaking to this audience specifically
   // beat the generic message they would otherwise have seen?
   control: {
@@ -308,7 +308,7 @@ export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
     hero: {
       headline: 'Your strategy shouldn’t be tested with real money',
       subheadline:
-        'FX Replay is arguably the most effective way to backtest your strategies. Execute more confidently and accomplish your trading goals.',
+        'Acme Backtest replays real historical markets candle by candle, so you can prove a strategy works before it touches real capital.',
       cta_text: 'Get started for free',
       cta_subtext: 'Start for free. No credit card required.',
       hero_image_type: 'standard_chart',
@@ -326,7 +326,7 @@ export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
           'Backtest using historical data and see how your setups perform with zero risk and no emotional bias.',
       },
       {
-        title: 'Mentor AI',
+        title: 'AI Coach',
         description:
           'Get AI-powered feedback on your trading behavior to identify patterns and improve performance.',
       },
@@ -343,33 +343,33 @@ export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
     ],
     reviews: [
       {
-        name: 'Mack Grey',
-        role: 'Trader',
-        credential: 'Trustpilot Verified',
+        name: 'Jordan K.',
+        role: 'Swing trader',
+        credential: 'Illustrative review',
         quote:
-          'FX Replay is hands down the best backtesting software in the game. I use it all the time, and I’m honestly a little jealous I didn’t have it earlier in my journey.',
-        verified: true,
+          'I used to forward-test for months before trusting a setup. Replaying two years of data in a weekend told me the same thing, faster.',
+        verified: false,
       },
       {
-        name: 'Dylan Mitch',
-        role: 'Trader',
-        credential: 'Trustpilot Verified',
+        name: 'Priya S.',
+        role: 'Part-time trader',
+        credential: 'Illustrative review',
         quote:
-          'FX Replay can help traders at every stage of their journey. Trading always pushes you to improve, and this is the kind of tool that helps you become a better trader.',
-        verified: true,
+          'The journal showed me I was cutting winners early. Fixing that one habit changed my numbers more than any new indicator.',
+        verified: false,
       },
       {
-        name: 'Ryan Condi',
-        role: 'Trader',
-        credential: 'Trustpilot Verified',
+        name: 'Marco D.',
+        role: 'Futures trader',
+        credential: 'Illustrative review',
         quote:
-          'Anyone can watch a YouTube video or take a course, but FX Replay lets you put what you’ve learned onto a real chart and see what actually works for you.',
-        verified: true,
+          'Courses teach you a setup. Replaying it on real charts is how you find out whether it works for you.',
+        verified: false,
       },
     ],
     modal: {
-      title: 'Start your free FX Replay trial',
-      subtitle: 'Join over 1 million traders testing their edge risk-free.',
+      title: 'Start your free Acme Backtest trial',
+      subtitle: 'Test your edge on real historical data, risk-free.',
       cta_text: 'Create Free Account & Start Replay →',
     },
   },
@@ -488,7 +488,7 @@ export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
     eyebrow: 'NO LOOKAHEAD. NO SKIPPED TICKS.',
     headline: 'Your replay engine has already seen the next candle.',
     subheadline:
-      'Bar-replay tools skip the intrabar ticks, so every trade where price touched both your stop and your target gets scored by a coin flip. FX Replay runs tick-by-tick, which means your R:R expectancy reflects what actually happened — not which level the engine decided to pick.',
+      'Bar-replay tools skip the intrabar ticks, so every trade where price touched both your stop and your target gets scored by a coin flip. Acme Backtest runs tick-by-tick, which means your R:R expectancy reflects what actually happened — not which level the engine decided to pick.',
     cta_text: 'Check the Ticks Yourself — Free',
     cta_subtext: '5-day free trial. No credit card. Replay any session and audit the fills yourself.',
     modal: {
@@ -505,7 +505,7 @@ export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
     eyebrow: 'SUB-SECOND TICK ACCURACY',
     headline: 'Stop guessing whether your stop or your target hit first.',
     subheadline:
-      'An hourly candle hides the order of events inside it. FX Replay replays sub-second ticks with realistic spread and slippage, so your results reflect fills you would genuinely have received.',
+      'An hourly candle hides the order of events inside it. Acme Backtest replays sub-second ticks with realistic spread and slippage, so your results reflect fills you would genuinely have received.',
     cta_text: 'Test Tick Precision Free',
     cta_subtext: '5-day free trial. No credit card. Replay any session and audit the fills yourself.',
     modal: {
@@ -532,18 +532,6 @@ export const COPY_DICTIONARY: Record<string, ExperimentVariantCopy> = {
       cta_text: 'Create free account →',
     },
   }),
-};
-
-/** Variant-specific product mockup (docs/IMAGE_ASSETS_CATALOG.md §3), keyed by hero_image_type. */
-export const HERO_VISUAL_BY_TYPE: Record<HeroVariables['hero_image_type'], string> = {
-  standard_chart:
-    'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d95448fbb5a8d2732e42_replay%20mode-%20desktop.svg',
-  prop_firm_overlay:
-    'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d94bfd5c98e00ccfcddb_prop%20firm%20-%20desktop.svg',
-  time_compression:
-    'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d9c27d7b963658a0ca26_seconds%20timeframes%20-%20desktop.svg',
-  multi_timeframe:
-    'https://cdn.prod.website-files.com/668852f921e36c3365b91d03/6984d95cd36a1cdac3cd7f9a_multipair%20-%20desktop.svg',
 };
 
 /**

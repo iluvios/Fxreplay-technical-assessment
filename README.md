@@ -1,4 +1,6 @@
-# FX Replay — Growth Engineer Technical Challenge
+# Acme Backtest — Autonomous A/B Testing Engine
+
+> **Portfolio demo.** Acme Backtest is a fictional trading-SaaS brand. This project started as a growth-engineering take-home for a real company and was rebranded for my portfolio: every logo, product screenshot, photo, testimonial and third-party broker mark was removed or replaced with original work. Reviews on the page are illustrative, and no traffic or conversion results are claimed.
 
 **Johan Daniel Álvarez** · Astro 5 · React 19 · Tailwind · TypeScript · Neon Postgres · PostHog · Vercel
 
@@ -19,7 +21,7 @@
 | [`/marketingengine`](https://fxreplay-technical-assessment.vercel.app/marketingengine) | 🔐 Admin console |
 | [`/api/users`](https://fxreplay-technical-assessment.vercel.app/api/users?limit=5) | Signups API |
 
-**Admin login:** `admin` / `fxreplay`
+**Admin login:** `admin` / `acme-demo`
 Conversion overview, variant copy comparison, traffic allocation, signup attribution, and
 the autonomous agent's decision log.
 

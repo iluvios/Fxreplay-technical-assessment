@@ -5,10 +5,9 @@ interface Props {
   ctaHref: string;
 }
 
-const { ctaHref } = Astro.props;
+import Logo from "./Logo.astro";
 
-const LOGO_URL =
-  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a02920e2b4fe38ee5a3a06a_fxreplay-logo.svg';
+const { ctaHref } = Astro.props;
 
 const columns = [
   {
@@ -17,15 +16,15 @@ const columns = [
       { label: 'Features', href: '#features' },
       { label: 'Assets', href: '#assets' },
       { label: 'Pricing', href: '#pricing' },
-      { label: 'FXR Battles', href: '#battles' },
+      { label: 'Battles', href: '#battles' },
     ],
   },
   {
     heading: 'Resources',
     links: [
       { label: 'Documentation', href: '#resources' },
-      { label: 'Mentor AI', href: '#features' },
-      { label: 'FXR Script', href: '#features' },
+      { label: 'AI Coach', href: '#features' },
+      { label: 'Strategy Script', href: '#features' },
       { label: 'Community', href: '#community' },
     ],
   },
@@ -48,7 +47,7 @@ const year = new Date().getFullYear();
     <div class="grid gap-10 pb-10 md:grid-cols-[1.5fr_repeat(3,1fr)]">
       <!-- Brand column -->
       <div>
-        <img src={LOGO_URL} alt="FX Replay" width="132" height="28" class="mb-4 h-7 w-auto" />
+        <Logo class="mb-4 h-7" />
         <p class="mb-5 max-w-xs text-sm leading-relaxed text-ink-muted">
           Backtest your strategy against real historical markets — before you risk real capital.
         </p>
@@ -92,7 +91,7 @@ const year = new Date().getFullYear();
       </p>
 
       <div class="flex flex-col items-center justify-between gap-3 text-xs text-ink-subtle sm:flex-row">
-        <p>&copy; {year} FX Replay. All rights reserved.</p>
+        <p>Acme Backtest is a fictional brand. This is a portfolio demo, not a real product.</p>
         <p>Built with Astro 5, React 19 &amp; TypeScript.</p>
       </div>
     </div>

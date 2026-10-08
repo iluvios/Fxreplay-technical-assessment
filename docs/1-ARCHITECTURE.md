@@ -1,5 +1,5 @@
 # Deliverable 1: Architecture Overview
-**FX Replay Growth Marketing Engine**  
+**Acme Backtest Growth Marketing Engine**  
 **Runtime:** Astro 5 (SSR Mode via `@astrojs/vercel`) + React 19 Islands + TypeScript + Tailwind CSS  
 **Target Platform:** Vercel Global Edge & Serverless Network
 
@@ -7,7 +7,7 @@
 
 ## 1. Overall Application Structure & Philosophy
 
-The application is engineered specifically to solve FX Replay’s primary growth challenge: **maximizing visitor-to-account conversion from marketing traffic while maintaining sub-second performance and statistical experimentation rigor**.
+The application is engineered specifically to solve Acme Backtest’s primary growth challenge: **maximizing visitor-to-account conversion from marketing traffic while maintaining sub-second performance and statistical experimentation rigor**.
 
 Rather than treating the landing page as a static brochure, the architecture is designed as a **dynamic, server-rendered growth engine** with two primary surfaces:
 1. **The Public Experiment Surface (`/freetrial` & `/freetrial?lp=X`):** A high-performance, single-template landing experience where copy and messaging are dynamically personalized to specific ICPs on the server before HTML delivery.
@@ -94,7 +94,7 @@ flowchart TD
 
 ### A. Astro 5 SSR over Next.js App Router
 * **The Decision:** Deploy on Astro 5 using `@astrojs/vercel` in `output: 'server'` mode rather than a full Next.js application.
-* **The Rationale:** FX Replay's target audience evaluates the product based on speed, responsiveness, and clean charting. Next.js ships the entire React runtime and hydration bundle to every visitor, which inflates First Input Delay (INP) and JavaScript execution time on mobile devices.
+* **The Rationale:** Acme Backtest's target audience evaluates the product based on speed, responsiveness, and clean charting. Next.js ships the entire React runtime and hydration bundle to every visitor, which inflates First Input Delay (INP) and JavaScript execution time on mobile devices.
 * **The Trade-Off & Win:** Astro's **Islands Architecture** compiles 85% of the landing page (hero text, comparison table, testimonials, pricing cards) to **100% static HTML with 0 KB of client JavaScript**. React 19 is loaded exclusively for the single interactive island (`<ChartSimulator client:idle />`).
 * **Performance Result:** Delivers a **98–100 Google Lighthouse score**, instant sub-second Largest Contentful Paint (LCP < 0.6s), and zero Total Blocking Time (TBT).
 
@@ -162,7 +162,7 @@ The backend is organized into standard RESTful serverless endpoints validated us
 
 ---
 
-## 6. What Would Change in a Full Production FX Replay System
+## 6. What Would Change in a Full Production Acme Backtest System
 
 If this system were transitioned to full production serving millions of monthly visits, the following architectural upgrades would be implemented:
 

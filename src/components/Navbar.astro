@@ -1,6 +1,6 @@
 ---
 // Static navigation bar (0 KB client JS) — docs/FRONTEND_BUILD_SPEC.md §3.1
-// Assets: docs/IMAGE_ASSETS_CATALOG.md §1
+import Logo from "./Logo.astro";
 interface Props {
   /** Signup destination, already carrying experiment or personalisation context. */
   ctaHref: string;
@@ -8,17 +8,10 @@ interface Props {
 
 const { ctaHref } = Astro.props;
 
-const LOGO_URL =
-  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a02920e2b4fe38ee5a3a06a_fxreplay-logo.svg';
-const CARET_URL =
-  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/6a7c037d1ffc6fbd2c79474b_arrow.svg';
-const BATTLES_URL =
-  'https://cdn.prod.website-files.com/667eb56e859feb725a6a82a1/68db58cc217697ef969d41a4_battles.svg';
-
 const navLinks = [
   { label: 'Features', href: '#features', hasCaret: true },
   { label: 'Resources', href: '#resources', hasCaret: true },
-  { label: 'FXR Battles', href: '#battles', hasCaret: false, icon: BATTLES_URL },
+  { label: 'Battles', href: '#battles', hasCaret: false },
   { label: 'Pricing', href: '#pricing', hasCaret: false },
 ];
 ---
@@ -26,8 +19,8 @@ const navLinks = [
 <header class="sticky top-0 z-50 w-full border-b border-line bg-surface/85 backdrop-blur-md">
   <div class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
     <!-- Brand -->
-    <a href="/" class="flex shrink-0 items-center transition-opacity hover:opacity-80" aria-label="FX Replay home">
-      <img src={LOGO_URL} alt="FX Replay" width="132" height="28" class="h-7 w-auto" />
+    <a href="/" class="flex shrink-0 items-center transition-opacity hover:opacity-80" aria-label="Acme Backtest home">
+      <Logo class="h-7" />
     </a>
 
     <!-- Center navigation -->
@@ -38,10 +31,9 @@ const navLinks = [
             href={link.href}
             class="flex items-center gap-1.5 text-sm font-semibold text-ink-muted transition-colors hover:text-ink"
           >
-            {link.icon && <img src={link.icon} alt="" width="16" height="16" class="h-4 w-4" aria-hidden="true" />}
             {link.label}
             {link.hasCaret && (
-              <img src={CARET_URL} alt="" width="10" height="10" class="h-2.5 w-2.5 opacity-60" aria-hidden="true" />
+              <svg viewBox="0 0 10 10" width="10" height="10" class="h-2.5 w-2.5 opacity-60" aria-hidden="true"><path d="M2 3.5 5 6.5 8 3.5" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>
             )}
           </a>
         ))

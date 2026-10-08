@@ -1,0 +1,297 @@
+---
+// Self-drawn product surface (inline SVG, 0 KB client JS, no external requests).
+// Replaces third-party product screenshots: every candle is generated here from a fixed
+// seed, so the same variant always renders the same picture and the markup is cacheable.
+export type MockupVariant =
+  'standard_chart' | 'prop_firm_overlay' | 'time_compression' | 'multi_timeframe' | 'journal' | 'coach' | 'script';
+
+interface Props {
+  variant: MockupVariant;
+  label: string;
+}
+
+const { variant, label } = Astro.props;
+
+const W = 428;
+const H = 388;
+
+/** Small deterministic PRNG (mulberry32) so the chart is identical on every render. */
+function rng(seed: number) {
+  return () => {
+    seed |= 0;
+    seed = (seed + 0x6d2b79f5) | 0;
+    let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+interface Candle {
+  x: number;
+  open: number;
+  close: number;
+  high: number;
+  low: number;
+  /** Price closed above the open (the y axis is inverted, so compare raw prices). */
+  up: boolean;
+}
+
+/** Random-walk candles scaled into the box (x, y, w, h). */
+function candles(seed: number, count: number, x: number, y: number, w: number, h: number) {
+  const rand = rng(seed);
+  const raw: { open: number; close: number; high: number; low: number }[] = [];
+  let price = 100;
+  for (let i = 0; i < count; i++) {
+    const open = price;
+    const close = open + (rand() - 0.46) * 4;
+    raw.push({
+      open,
+      close,
+      high: Math.max(open, close) + rand() * 1.6,
+      low: Math.min(open, close) - rand() * 1.6,
+    });
+    price = close;
+  }
+  const max = Math.max(...raw.map((c) => c.high));
+  const min = Math.min(...raw.map((c) => c.low));
+  const scale = (v: number) => y + ((max - v) / (max - min)) * h;
+  const step = w / count;
+  return {
+    step,
+    list: raw.map(
+      (c, i): Candle => ({
+        x: x + i * step + step / 2,
+        open: scale(c.open),
+        close: scale(c.close),
+        high: scale(c.high),
+        low: scale(c.low),
+        up: c.close >= c.open,
+      })
+    ),
+  };
+}
+
+const main = candles(7, 42, 16, 56, W - 32, 230);
+const cursorIndex = 30;
+const mini = [
+  { title: 'EURUSD · 1D', seed: 11 },
+  { title: 'EURUSD · 4H', seed: 23 },
+  { title: 'EURUSD · 15m', seed: 37 },
+  { title: 'EURUSD · 1m', seed: 41 },
+].map((m, i) => ({
+  ...m,
+  x: 12 + (i % 2) * 206,
+  y: 52 + Math.floor(i / 2) * 162,
+  chart: candles(m.seed, 22, 20 + (i % 2) * 206, 82 + Math.floor(i / 2) * 162, 186, 112),
+}));
+
+const timeframes = ['5s', '1m', '15m', '1H', '4H', '1D'];
+const trades = [
+  { pair: 'EURUSD', side: 'Long', r: '+2.1R', win: true },
+  { pair: 'NAS100', side: 'Short', r: '−1.0R', win: false },
+  { pair: 'XAUUSD', side: 'Long', r: '+3.4R', win: true },
+  { pair: 'GBPJPY', side: 'Long', r: '+1.2R', win: true },
+  { pair: 'US30', side: 'Short', r: '−1.0R', win: false },
+  { pair: 'EURUSD', side: 'Short', r: '+1.8R', win: true },
+];
+const scriptLines = [
+  'strategy("London breakout")',
+  '',
+  'range = session("02:00", "05:00")',
+  'if close > range.high:',
+  '    buy(risk=0.5%, stop=range.low)',
+  '    target(r=2)',
+  '',
+  'backtest(from="2019-01-01")',
+];
+const equity = (() => {
+  const rand = rng(3);
+  let v = 0;
+  return Array.from({ length: 28 }, (_, i) => {
+    v += (rand() - 0.38) * 10;
+    return `${24 + i * 14},${330 - v}`;
+  }).join(' ');
+})();
+
+const showMainChart = ['standard_chart', 'prop_firm_overlay', 'time_compression', 'coach'].includes(variant);
+const visible = (list: Candle[]) => (variant === 'standard_chart' ? list.slice(0, cursorIndex + 1) : list);
+---
+
+<svg
+  viewBox={`0 0 ${W} ${H}`}
+  width={W}
+  height={H}
+  role="img"
+  aria-label={`${label} preview`}
+  class="block h-full w-full bg-surface font-mono"
+>
+  <!-- Grid -->
+  <g class="stroke-line" stroke-width="1">
+    {[90, 150, 210, 270, 330].map((y) => <line x1="0" x2={W} y1={y} y2={y} />)}
+  </g>
+
+  {
+    showMainChart && (
+      <g>
+        {visible(main.list).map((c) => {
+          return (
+            <g class={c.up ? 'fill-success stroke-success' : 'fill-error stroke-error'}>
+              <line x1={c.x} x2={c.x} y1={c.high} y2={c.low} stroke-width="1" />
+              <rect
+                x={c.x - main.step * 0.32}
+                y={Math.min(c.open, c.close)}
+                width={main.step * 0.64}
+                height={Math.max(1.5, Math.abs(c.close - c.open))}
+                rx="0.5"
+              />
+            </g>
+          );
+        })}
+      </g>
+    )
+  }
+
+  <!-- Top bar shared by every variant -->
+  <g>
+    <rect x="12" y="12" width="132" height="24" rx="6" class="fill-surface-inset" />
+    <text x="24" y="28" font-size="11" class="fill-ink">EURUSD · 1H</text>
+    <rect x={W - 108} y="12" width="96" height="24" rx="6" class="fill-brand" />
+    <text x={W - 60} y="28" font-size="11" text-anchor="middle" class="fill-white">▶ Replay</text>
+  </g>
+
+  {
+    variant === 'standard_chart' && (
+      <g>
+        <line
+          x1={main.list[cursorIndex].x + main.step / 2}
+          x2={main.list[cursorIndex].x + main.step / 2}
+          y1="48"
+          y2="300"
+          class="stroke-brand-light"
+          stroke-dasharray="4 4"
+        />
+        <rect x="16" y="318" width={W - 32} height="44" rx="10" class="fill-surface-raised stroke-line" />
+        <text x="32" y="344" font-size="11" class="fill-ink-muted">◀◀   ❚❚   ▶▶</text>
+        <rect x="150" y="337" width="200" height="6" rx="3" class="fill-surface-inset" />
+        <rect x="150" y="337" width="140" height="6" rx="3" class="fill-brand" />
+        <text x={W - 32} y="344" font-size="10" text-anchor="end" class="fill-ink-subtle">2019-03-14</text>
+      </g>
+    )
+  }
+
+  {
+    variant === 'prop_firm_overlay' && (
+      <g>
+        <rect x="16" y="296" width={W - 32} height="80" rx="10" class="fill-surface-raised stroke-line" />
+        {[
+          { label: 'Profit target', value: '6.2% / 8%', pct: 0.78, cls: 'fill-success' },
+          { label: 'Daily drawdown', value: '2.1% / 5%', pct: 0.42, cls: 'fill-warning' },
+          { label: 'Max drawdown', value: '3.4% / 10%', pct: 0.34, cls: 'fill-brand' },
+        ].map((rule, i) => (
+          <g>
+            <text x="30" y={318 + i * 22} font-size="10" class="fill-ink-muted">{rule.label}</text>
+            <rect x="140" y={311 + i * 22} width="180" height="6" rx="3" class="fill-surface-inset" />
+            <rect x="140" y={311 + i * 22} width={180 * rule.pct} height="6" rx="3" class={rule.cls} />
+            <text x={W - 30} y={318 + i * 22} font-size="10" text-anchor="end" class="fill-ink">{rule.value}</text>
+          </g>
+        ))}
+      </g>
+    )
+  }
+
+  {
+    variant === 'time_compression' && (
+      <g>
+        <rect x="16" y="318" width={W - 32} height="44" rx="10" class="fill-surface-raised stroke-line" />
+        {timeframes.map((tf, i) => (
+          <g>
+            <rect
+              x={28 + i * 64}
+              y="328"
+              width="52"
+              height="24"
+              rx="6"
+              class={i === 0 ? 'fill-brand' : 'fill-surface-inset'}
+            />
+            <text x={54 + i * 64} y="344" font-size="11" text-anchor="middle" class={i === 0 ? 'fill-white' : 'fill-ink-muted'}>
+              {tf}
+            </text>
+          </g>
+        ))}
+      </g>
+    )
+  }
+
+  {
+    variant === 'coach' && (
+      <g>
+        <rect x="16" y="290" width={W - 32} height="86" rx="10" class="fill-surface-raised stroke-line" />
+        <circle cx="38" cy="312" r="10" class="fill-brand" />
+        <text x="38" y="316" font-size="10" text-anchor="middle" class="fill-white">AI</text>
+        <text x="56" y="316" font-size="10.5" class="fill-ink">You exit winners early on Fridays.</text>
+        <text x="56" y="334" font-size="10.5" class="fill-ink-muted">Holding to 2R would have added</text>
+        <text x="56" y="350" font-size="10.5" class="fill-ink-muted">+11.4R over your last 60 trades.</text>
+        <text x="56" y="366" font-size="10" class="fill-brand-light">Review those trades →</text>
+      </g>
+    )
+  }
+
+  {
+    variant === 'multi_timeframe' && (
+      <g>
+        {mini.map((m) => (
+          <g>
+            <rect x={m.x} y={m.y} width="198" height="150" rx="8" class="fill-surface-raised stroke-line" />
+            <text x={m.x + 10} y={m.y + 18} font-size="10" class="fill-ink-muted">{m.title}</text>
+            {m.chart.list.map((c) => (
+              <g class={c.up ? 'fill-success stroke-success' : 'fill-error stroke-error'}>
+                <line x1={c.x} x2={c.x} y1={c.high} y2={c.low} stroke-width="1" />
+                <rect
+                  x={c.x - m.chart.step * 0.3}
+                  y={Math.min(c.open, c.close)}
+                  width={m.chart.step * 0.6}
+                  height={Math.max(1.2, Math.abs(c.close - c.open))}
+                />
+              </g>
+            ))}
+          </g>
+        ))}
+      </g>
+    )
+  }
+
+  {
+    variant === 'journal' && (
+      <g>
+        <rect x="12" y="52" width={W - 24} height="324" rx="10" class="fill-surface-raised stroke-line" />
+        {['Pair', 'Side', 'Result'].map((h, i) => (
+          <text x={32 + i * 130} y="78" font-size="10" class="fill-ink-subtle">{h}</text>
+        ))}
+        {trades.map((t, i) => (
+          <g>
+            <line x1="24" x2={W - 24} y1={92 + i * 42} y2={92 + i * 42} class="stroke-line" />
+            <text x="32" y={118 + i * 42} font-size="12" class="fill-ink">{t.pair}</text>
+            <text x="162" y={118 + i * 42} font-size="12" class="fill-ink-muted">{t.side}</text>
+            <text x="292" y={118 + i * 42} font-size="12" class={t.win ? 'fill-success' : 'fill-error'}>{t.r}</text>
+          </g>
+        ))}
+      </g>
+    )
+  }
+
+  {
+    variant === 'script' && (
+      <g>
+        <rect x="12" y="52" width={W - 24} height="200" rx="10" class="fill-surface-raised stroke-line" />
+        {scriptLines.map((line, i) => (
+          <g>
+            <text x="28" y={80 + i * 21} font-size="10" class="fill-ink-subtle">{i + 1}</text>
+            <text x="48" y={80 + i * 21} font-size="11" class={i === 0 ? 'fill-brand-light' : 'fill-ink'} style="white-space: pre">{line}</text>
+          </g>
+        ))}
+        <text x="16" y="282" font-size="10" class="fill-ink-subtle">Equity curve · 412 trades</text>
+        <polyline points={equity} fill="none" stroke-width="2" class="stroke-success" />
+      </g>
+    )
+  }
+</svg>

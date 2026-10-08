@@ -1,4 +1,4 @@
--- FX Replay growth schema — Neon PostgreSQL
+-- Acme Backtest growth schema — Neon PostgreSQL
 -- Spec: docs/DATABASE_SCHEMA.md
 --
 -- Every statement is idempotent (IF NOT EXISTS / ON CONFLICT), so `npm run db:migrate`

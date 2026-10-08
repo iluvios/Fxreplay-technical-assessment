@@ -1,5 +1,5 @@
 {
-  "name": "fxreplay-growth-assessment",
+  "name": "acme-backtest-growth-engine",
   "type": "module",
   "version": "0.0.1",
   "scripts": {

@@ -1,4 +1,6 @@
-# FX Replay — Growth Engineer Technical Challenge
+# Acme Backtest — Autonomous A/B Testing Engine
+
+> **Portfolio demo.** Acme Backtest is a fictional trading-SaaS brand. This project started as a growth-engineering take-home for a real company and was rebranded for my portfolio: every logo, product screenshot, photo, testimonial and third-party broker mark was removed or replaced with original work. Reviews on the page are illustrative, and no traffic or conversion results are claimed.
 
 **Johan Daniel Álvarez**
 Live: [fxreplay-technical-assessment.vercel.app](https://fxreplay-technical-assessment.vercel.app/)
@@ -41,7 +43,7 @@ Open `http://localhost:4321`. It runs with no database — there's an in-memory 
 so nothing needs setting up to look around. Add a `DATABASE_URL` and run
 `npm run db:migrate` to use real Postgres.
 
-**Admin console:** `/marketingengine` — username `admin`, password `fxreplay`.
+**Admin console:** `/marketingengine` — username `admin`, password `acme-demo`.
 
 ### The pages
 

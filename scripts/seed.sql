@@ -124,7 +124,7 @@ VALUES
   '{
      "eyebrow": "THE PROFESSIONAL BACKTESTER",
      "headline": "Your strategy shouldn''t be tested with real money",
-     "subheadline": "FX Replay is arguably the most effective way to backtest your strategies.",
+     "subheadline": "Acme Backtest is arguably the most effective way to backtest your strategies.",
      "cta_text": "Get started for free",
      "mechanism": "generic baseline"
    }'::jsonb
@@ -166,7 +166,7 @@ VALUES
   '{
      "eyebrow": "THE PROFESSIONAL BACKTESTER",
      "headline": "Your strategy shouldn''t be tested with real money",
-     "subheadline": "FX Replay is arguably the most effective way to backtest your strategies.",
+     "subheadline": "Acme Backtest is arguably the most effective way to backtest your strategies.",
      "cta_text": "Get started for free",
      "mechanism": "generic baseline"
    }'::jsonb
@@ -208,7 +208,7 @@ VALUES
   '{
      "eyebrow": "THE PROFESSIONAL BACKTESTER",
      "headline": "Your strategy shouldn''t be tested with real money",
-     "subheadline": "FX Replay is arguably the most effective way to backtest your strategies.",
+     "subheadline": "Acme Backtest is arguably the most effective way to backtest your strategies.",
      "cta_text": "Get started for free",
      "mechanism": "generic baseline"
    }'::jsonb
@@ -218,7 +218,7 @@ VALUES
   '{
      "eyebrow": "NO LOOKAHEAD. NO SKIPPED TICKS.",
      "headline": "Your replay engine has already seen the next candle.",
-     "subheadline": "Bar-replay tools skip the intrabar ticks, so every trade where price touched both your stop and your target gets scored by a coin flip. FX Replay runs tick-by-tick, which means your R:R expectancy reflects what actually happened — not which level the engine decided to pick.",
+     "subheadline": "Bar-replay tools skip the intrabar ticks, so every trade where price touched both your stop and your target gets scored by a coin flip. Acme Backtest runs tick-by-tick, which means your R:R expectancy reflects what actually happened — not which level the engine decided to pick.",
      "cta_text": "Check the Ticks Yourself — Free",
      "mechanism": "invalidation — accuses the engine of already seeing future ticks"
    }'::jsonb
@@ -228,7 +228,7 @@ VALUES
   '{
      "eyebrow": "SUB-SECOND TICK ACCURACY",
      "headline": "Stop guessing whether your stop or your target hit first.",
-     "subheadline": "An hourly candle hides the order of events inside it. FX Replay replays sub-second ticks with realistic spread and slippage, so your results reflect fills you would genuinely have received.",
+     "subheadline": "An hourly candle hides the order of events inside it. Acme Backtest replays sub-second ticks with realistic spread and slippage, so your results reflect fills you would genuinely have received.",
      "cta_text": "Test Tick Precision Free",
      "mechanism": "measurement precision — the ambiguous-wick problem they already know"
    }'::jsonb

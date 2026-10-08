@@ -140,7 +140,7 @@ class AnalyticsManager {
     if (this.configured) {
       this.send((client) => client.identify(userId, traits));
     } else {
-      console.log(`%c[Identity Aliased: ${userId}]`, 'color: #0260FD; font-weight: bold;', traits);
+      console.log(`%c[Identity Aliased: ${userId}]`, 'color: #7C3AED; font-weight: bold;', traits);
     }
   }
 

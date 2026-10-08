@@ -1,6 +1,6 @@
-# FX Replay Frontend Build Specification & Master Copywriting Blueprint
+# Acme Backtest Frontend Build Specification & Master Copywriting Blueprint
 **Target Audience:** Autonomous AI Agent (Claude Code / Opus 5) & Growth Engineering Team  
-**Primary Goal:** Build an exact visual replica of `fxreplay.com` in Astro 5 SSR + React 19 Islands + Tailwind CSS, with zero layout shift (CLS = 0) dynamic experiment copy injection.
+**Primary Goal:** Build a fast, conversion-focused SaaS landing page in Astro 5 SSR + React 19 Islands + Tailwind CSS, with zero layout shift (CLS = 0) dynamic experiment copy injection.
 
 ---
 
@@ -8,37 +8,30 @@
 
 The AI agent must reference these assets and styles directly without searching or guessing:
 
-### Asset Paths
-* **Main Brand Logo:** `docs/FX_Replay_Brand_Kit/Brand Kit/logos/FXReplayLogo.svg`
-* **White Isotype Mark:** `docs/FX_Replay_Brand_Kit/Brand Kit/logos/isotypeWhite.svg`
-* **Black Isotype Mark:** `docs/FX_Replay_Brand_Kit/Brand Kit/logos/isotypeBlack.svg`
-* *(Copy these SVGs to `public/logos/` if you stop hotlinking the Webflow CDN — see `IMAGE_ASSETS_CATALOG.md`.)*
+### Brand assets
+* **Logo:** `src/components/Logo.astro` (inline SVG wordmark). **Favicon:** `public/favicon.svg`.
+* **Product mockups:** `src/components/ProductMockup.astro` draws every product surface inline (seeded candles, no image requests).
+* *Acme Backtest is a fictional demo brand. No third-party logos, screenshots or photos are used.*
 
-### Design System & Color Tokens (Official FX Replay Brand Kit)
+### Design System & Color Tokens
 
-**Authoritative source:** `docs/FX_Replay_Brand_Kit/Brand Kit/brand-kit.html` (`PRIM` primitives + `SEM` semantic tokens).
 **Implemented in:** `tailwind.config.mjs` — use the Tailwind token classes, never hard-code hex in components.
 
-| Purpose | Semantic token -> primitive | Hex | Tailwind class |
-|---|---|---|---|
-| Page ground | `bg-primary` -> `dark-900` | `#030303` | `bg-surface` |
-| Card surface | `bg-secondary` -> `dark-800` | `#0A0A0A` | `bg-surface-raised` |
-| Inner / sub-surface | `bg-tertiary` -> `dark-700` | `#1A1A1A` | `bg-surface-inset` |
-| Border | `border-primary` -> `dark-700` | `#1A1A1A` | `border-line` |
-| Border (strong) | `border-secondary` -> `dark-600` | `#2A2A2A` | `border-line-strong` |
-| Brand / CTA | `btn-bg-primary-active` -> `blue-600` | `#0260FD` | `bg-brand` |
-| Brand hover | `btn-bg-primary-hover` -> `blue-800` | `#01307F` | `hover:bg-brand-hover` |
-| Brand accent text | `btn-text-minimal-hover` -> `blue-500` | `#2C7BFD` | `text-brand-light` |
-| Profit candles / positive P&L | `success` | `#53B483` | `bg-success` / `text-success` |
-| Loss candles / negative P&L | `error` | `#CD3636` | `bg-error` / `text-error` |
-| Text primary | `text-primary` -> `neutral-50` | `#F6F6F6` | `text-ink` |
-| Text secondary | `text-secondary` -> `neutral-200` | `#D1D1D1` | `text-ink-muted` |
-| Text disabled | `text-disabled` -> `neutral-400` | `#888888` | `text-ink-subtle` |
-
-> **Note:** primary-button hover resolves **darker** (`blue-800 #01307F`), not lighter. `#2C7BFD`
-> (`blue-500`) is a *text* accent (`btn-text-minimal-hover`), not a button fill.
-> The kit's `tokens/tokens.css` and `source/` folders were absent from the delivered archive;
-> the semantic layer is therefore reproduced in `tailwind.config.mjs`.
+| Purpose | Hex | Tailwind class |
+|---|---|---|
+| Page ground | `#030303` | `bg-surface` |
+| Card surface | `#0A0A0A` | `bg-surface-raised` |
+| Inner / sub-surface | `#1A1A1A` | `bg-surface-inset` |
+| Border | `#1A1A1A` | `border-line` |
+| Border (strong) | `#2A2A2A` | `border-line-strong` |
+| Brand / CTA | `#7C3AED` | `bg-brand` |
+| Brand hover | `#6D28D9` | `hover:bg-brand-hover` |
+| Brand accent text | `#A78BFA` | `text-brand-light` |
+| Profit candles / positive P&L | `#53B483` | `bg-success` / `text-success` |
+| Loss candles / negative P&L | `#CD3636` | `bg-error` / `text-error` |
+| Text primary | `#F6F6F6` | `text-ink` |
+| Text secondary | `#D1D1D1` | `text-ink-muted` |
+| Text disabled | `#888888` | `text-ink-subtle` |
 
 * **Typography:**
   * **Headings (`h1`, `h2`, `h3`):** `Lato`, sans-serif (Weights: 400, 700, 900) — `font-display`
@@ -58,7 +51,7 @@ src/
 │   ├── Navbar.astro            # Static: Logo, Nav Links, Sign In, Primary 'Get Started' CTA
 │   ├── Hero.astro              # Static: Headline, Subtitle, CTA Button, Subtext (injects dynamic copy)
 │   ├── ChartSimulator.tsx      # React Island (client:visible) — the ONLY island on the page
-│   ├── FeatureTabs.astro       # Static: 4 Tabs (Journal, Prop Simulator, Mentor AI, Script), CSS-only switching
+│   ├── FeatureTabs.astro       # Static: 4 Tabs (Journal, Prop Simulator, AI Coach, Script), CSS-only switching
 │   ├── KeyFeatures.astro       # Static: variant pillars + "Performance by time" CSS bar chart
 │   ├── AssetCoverage.astro     # Static: Forex, Futures, Stocks, Crypto category filters & asset cards
 │   ├── CommunityStories.astro  # Static: baseline traders (control) or ICP-personalized reviews
@@ -87,8 +80,8 @@ src/
 ## 3. Section-by-Section Visual Breakdown (From Screenshots)
 
 ### Section 1: Top Navigation Bar (`Navbar.astro`)
-* **Left:** `FXReplayLogo.svg` (height 28px)
-* **Center Links:** `Features ∨`, `Resources ∨`, `FXR Battles`, `Pricing` (`text-ink-muted`, hover `text-ink`)
+* **Left:** `AcmeBacktestLogo.svg` (height 28px)
+* **Center Links:** `Features ∨`, `Resources ∨`, `Battles`, `Pricing` (`text-ink-muted`, hover `text-ink`)
 * **Right:**
   * Language Selector pill (`🇬🇧 EN`)
   * `Get Started` button: blue pill (`bg-brand hover:bg-brand-hover text-white px-5 py-2 rounded-full font-semibold text-sm transition-colors`) -> links to `/signup?lp=${lpParam}`.
@@ -123,7 +116,7 @@ src/
 ### Section 4: Feature Tabs Section (`FeatureTabs.astro`)
 *Direct visual replica of Screenshot 3:*
 * **Tab Switcher (Dark Pill Bar):**
-  * 4 Tabs: `FXR Journal` | `Prop firm simulator` | `Mentor AI` | `FXR Script`
+  * 4 Tabs: `Journal` | `Prop firm simulator` | `AI Coach` | `Strategy Script`
   * Active state: `bg-surface-inset` with `text-ink`; inactive: `text-ink-muted`.
   * Switching is a pure CSS radio-input pattern — 0 KB of JavaScript.
 * **Content Card:**
@@ -132,7 +125,7 @@ src/
     * Subheadline: `text-ink-muted leading-relaxed mb-6`
     * CTA: variant `feature_tab.cta_text` (blue pill button)
   * Right Side:
-    * Mockup preview image from `IMAGE_ASSETS_CATALOG.md` §3.
+    * Inline product mockup (`ProductMockup.astro`).
 
 ---
 
@@ -140,7 +133,7 @@ src/
 *Direct visual replica of Screenshot 4:*
 * **Header:**
   * Title: **"Explore our key features"**
-  * Subtitle: *"Maximize your trading potential with FX Replay."*
+  * Subtitle: *"Maximize your trading potential with Acme Backtest."*
 * **Left Feature Column:** the active variant's `pillars[]` from the copy dictionary; the second
   item is highlighted (`border-brand/40 bg-brand/10`).
 * **Right Visual Card:**
@@ -168,10 +161,9 @@ src/
 ---
 
 ### Section 7: Community Stories (`CommunityStories.astro`)
-* **Header:** "Stories from the community" / *"Real experiences from traders committed to earning their progress."*
+* **Header:** "Stories from the community" / *"Illustrative reviews — Acme Backtest is a fictional brand built for a portfolio demo."*
 * **Grid:** 3 review cards from the variant's `reviews[]`.
-  * Control renders the baseline traders with their video thumbnails (`IMAGE_ASSETS_CATALOG.md` §4).
-  * Segmented variants render ICP-personalized reviews with an initials avatar.
+  * Every arm renders illustrative reviews with an initials avatar; none carry a verified badge.
 
 ---
 

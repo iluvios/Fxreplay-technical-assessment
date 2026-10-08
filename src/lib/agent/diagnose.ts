@@ -33,7 +33,7 @@ function env(name: string): string | undefined {
 const DEFAULT_MODEL = 'gpt-5.6-luna';
 const API_URL = 'https://api.openai.com/v1/chat/completions';
 
-const SYSTEM_PROMPT = `You are the FX Replay Growth Intelligence Agent.
+const SYSTEM_PROMPT = `You are the Acme Backtest Growth Intelligence Agent.
 
 You analyse A/B test results for a market-replay and backtesting product sold to retail
 traders. The statistics have ALREADY been computed deterministically and the decision has

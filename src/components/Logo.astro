@@ -1,0 +1,20 @@
+---
+// Wordmark for the fictional "Acme Backtest" brand used in this demo.
+// Inline SVG + live text, so there is no logo request on the critical path.
+interface Props {
+  class?: string;
+}
+
+const { class: className = 'h-7' } = Astro.props;
+---
+
+<span class:list={['inline-flex items-center gap-2', className]}>
+  <svg viewBox="0 0 32 32" class="h-full w-auto" aria-hidden="true">
+    <rect width="32" height="32" rx="8" class="fill-brand" />
+    <path d="M8 22 L13 15 L17 18 L24 9" fill="none" stroke="white" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="24" cy="9" r="2.2" fill="white" />
+  </svg>
+  <span class="font-display text-lg font-black leading-none tracking-tight text-ink">
+    Acme<span class="text-brand-light"> Backtest</span>
+  </span>
+</span>

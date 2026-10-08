@@ -1,7 +1,7 @@
-# FX Replay: Master Copywriting & Experiment Matrix
+# Acme Backtest: Master Copywriting & Experiment Matrix
 **Target Surfaces:** Public Landing Page (`/freetrial?lp=X`) & Database Seed (`experiment_variants`)  
 **Methodology:** Ultra-Personalization per ICP with 4-Variable Hero Testing & Tailored Client Reviews  
-**Reference Source:** Official `fxreplay.com` production HTML & community reviews
+**Reference Source:** Official `acme-backtest.example` production HTML & community reviews
 
 ---
 
@@ -24,7 +24,7 @@ In our experimentation architecture, the Hero section is modularized into **4 is
 
 ## 2. Ultra-Personalized Client Reviews Framework
 
-In `fxreplay.com`, the social proof section is headlined **"Stories from the community — Real experiences from traders committed to earning their progress"** with Trustpilot verification.
+In `acme-backtest.example`, the social proof section is headlined **"Stories from the community — Real experiences from traders committed to earning their progress"** with Trustpilot verification.
 
 To maximize ICP conversion:
 * Generic visitors see the baseline platform reviews (Dylan Mitch, Mack Grey, Ryan Condi).
@@ -34,38 +34,38 @@ To maximize ICP conversion:
 
 ## 3. Complete Section-by-Section Copy Matrix
 
-### VARIANT 0: CONTROL (Baseline `fxreplay.com`)
+### VARIANT 0: CONTROL (Baseline `acme-backtest.example`)
 *Target: Organic visitors, direct traffic, general trading queries.*
 
 #### A. The 4 Hero Variables
 1. **Main Header:**
    > "Your strategy shouldn’t be tested with real money"
 2. **Small Description:**
-   > "FX Replay is arguably the most effective way to backtest your strategies. Execute more confidently and accomplish your trading goals."
+   > "Acme Backtest is arguably the most effective way to backtest your strategies. Execute more confidently and accomplish your trading goals."
 3. **CTA Action:**
    > Button: **`Get started for free`**  
    > Subtext: *Start for free. No credit card required.*
 4. **Hero Visual (`hero_image`):**
    > Standard TradingView Candlestick Replay Interface (EURUSD 1H chart with replay controls).
 
-#### B. Feature Tabs Copy (`FXR Journal` active)
+#### B. Feature Tabs Copy (`Journal` active)
 * **Headline:** "Track every move"
 * **Description:** "The insights and tools that help you increase results, boost trading outcomes, and trade your strategy with clarity before it ever goes live."
 * **CTA:** `Start now`
 
 #### C. Key Features List
 1. **Live Journal:** Backtest using historical data and see how your setups perform with zero risk and no emotional bias.
-2. **Mentor AI:** Get AI-powered feedback on your trading behavior to identify patterns and improve performance.
+2. **AI Coach:** Get AI-powered feedback on your trading behavior to identify patterns and improve performance.
 3. **Prop Firm Simulator:** Simulate prop firm challenges with real rules and conditions to prepare for funded accounts.
 4. **P&L Tracker:** Visualize your trading with our PnL Tracker, a dynamic graph that displays your profit and loss trends over time.
 
-#### D. Client Reviews (Direct from `fxreplay.com` HTML)
+#### D. Client Reviews (Direct from `acme-backtest.example` HTML)
 * **Reviewer 1 (Mack Grey, Trader):**  
-  > *"FX Replay is hands down the best backtesting software in the game. I use it all the time, and I’m honestly a little jealous I didn’t have it earlier in my journey."*
+  > *"Acme Backtest is hands down the best backtesting software in the game. I use it all the time, and I’m honestly a little jealous I didn’t have it earlier in my journey."*
 * **Reviewer 2 (Dylan Mitch, Trader):**  
-  > *"FX Replay can help traders at every stage of their journey. Trading always pushes you to improve, and this is the kind of tool that helps you become a better trader."*
+  > *"Acme Backtest can help traders at every stage of their journey. Trading always pushes you to improve, and this is the kind of tool that helps you become a better trader."*
 * **Reviewer 3 (Ryan Condi, Trader):**  
-  > *"Anyone can watch a YouTube video or take a course, but FX Replay lets you put what you’ve learned onto a real chart and see what actually works for you."*
+  > *"Anyone can watch a YouTube video or take a course, but Acme Backtest lets you put what you’ve learned onto a real chart and see what actually works for you."*
 
 ---
 
@@ -97,11 +97,11 @@ To maximize ICP conversion:
 
 #### D. Ultra-Personalized Client Reviews (Prop Firm Focus)
 * **Reviewer 1 (Marcus K., Funded Trader - $200k FTMO):**  
-  > *"I blew three $100k evaluations in a row because of the 5% daily drawdown rule. I spent 2 weeks in FX Replay practicing my lot sizing under their exact rules, and passed Phase 1 and 2 on my very next try."*
+  > *"I blew three $100k evaluations in a row because of the 5% daily drawdown rule. I spent 2 weeks in Acme Backtest practicing my lot sizing under their exact rules, and passed Phase 1 and 2 on my very next try."*
 * **Reviewer 2 (Sarah T., Apex Funded Futures Trader):**  
-  > *"FX Replay is the only tool that calculates trailing drawdown the exact same way prop firms do. It saved me at least $1,200 in reset fees this year alone."*
+  > *"Acme Backtest is the only tool that calculates trailing drawdown the exact same way prop firms do. It saved me at least $1,200 in reset fees this year alone."*
 * **Reviewer 3 (Devon R., Funded Trader):**  
-  > *"Don't buy a prop challenge until you can pass 3 consecutive simulated months on FX Replay. It turned trading from gambling into a predictable business."*
+  > *"Don't buy a prop challenge until you can pass 3 consecutive simulated months on Acme Backtest. It turned trading from gambling into a predictable business."*
 
 ---
 
@@ -120,24 +120,24 @@ To maximize ICP conversion:
 4. **Hero Visual (`hero_image`):**
    > Replay Speed Controller Interface showing session jumps (`Go to London Open`), fast-forward slider (10x / 30x), and auto-journaled trade log.
 
-#### B. Feature Tabs Copy (`FXR Journal` active)
+#### B. Feature Tabs Copy (`Journal` active)
 * **Headline:** "Compress 3 years of screen time into 30 days"
 * **Description:** "Skip the slow consolidation and execute high-probability trade setups at your own pace whenever your schedule allows."
 * **CTA:** `Start weekend session`
 
 #### C. Key Features List
-1. **24/7 Market Access:** Forex, Futures, and Indices never close on FX Replay. Practice on Saturday morning or Sunday evening.
+1. **24/7 Market Access:** Forex, Futures, and Indices never close on Acme Backtest. Practice on Saturday morning or Sunday evening.
 2. **Go-To Session Jumps:** Jump directly to London (03:00 EST) or New York (08:30 EST) market open in one click—no waiting around.
 3. **Automated Trade Logging:** Every trade you take is auto-logged with entry price, exit price, R:R, and P&L—zero manual spreadsheet entry.
 4. **Time-Based Edge Analytics:** Discover which specific hours of the day your strategy performs best so you only trade when it counts.
 
 #### D. Ultra-Personalized Client Reviews (Weekend Trader Focus)
 * **Reviewer 1 (David L., Software Engineer & Swing Trader):**  
-  > *"Between standups and sprint planning, I can't look at live charts during New York open. FX Replay lets me trade 5 months of price action every Sunday afternoon. My learning curve jumped 10x."*
+  > *"Between standups and sprint planning, I can't look at live charts during New York open. Acme Backtest lets me trade 5 months of price action every Sunday afternoon. My learning curve jumped 10x."*
 * **Reviewer 2 (Elena M., Management Consultant):**  
-  > *"I work 50-hour weeks. Real market hours don't fit my life. FX Replay gave me the reps I needed to become consistently profitable without quitting my career."*
+  > *"I work 50-hour weeks. Real market hours don't fit my life. Acme Backtest gave me the reps I needed to become consistently profitable without quitting my career."*
 * **Reviewer 3 (Tom B., Finance Manager):**  
-  > *"Logging trades manually in Notion used to take hours. FX Replay logs the candle screenshot, the R:R, and the exact entry automatically while I test on weekends."*
+  > *"Logging trades manually in Notion used to take hours. Acme Backtest logs the candle screenshot, the R:R, and the exact entry automatically while I test on weekends."*
 
 ---
 
@@ -147,7 +147,7 @@ To maximize ICP conversion:
 
 #### A. The 4 Hero Variables
 1. **Main Header:**
-   > "TradingView was built for charts. FX Replay was built for edge."
+   > "TradingView was built for charts. Acme Backtest was built for edge."
 2. **Small Description:**
    > "True multi-timeframe stepping. No candle flash leaks. Sub-second tick data so you know whether Stop Loss or Take Profit hit first."
 3. **CTA Action:**
@@ -156,7 +156,7 @@ To maximize ICP conversion:
 4. **Hero Visual (`hero_image`):**
    > Multi-Timeframe Synchronized Grid Mockup (4H bias chart side-by-side with 1m execution chart stepping in perfect unison).
 
-#### B. Feature Tabs Copy (`FXR Script` active)
+#### B. Feature Tabs Copy (`Strategy Script` active)
 * **Headline:** "Zero lookahead leaks. Sub-second tick accuracy."
 * **Description:** "Switch from the Daily to the 1-minute chart without flashing future price action. Backtest with the mathematical integrity TradingView lacks."
 * **CTA:** `Test tick precision`
@@ -169,9 +169,9 @@ To maximize ICP conversion:
 
 #### D. Ultra-Personalized Client Reviews (Precision & Technical Focus)
 * **Reviewer 1 (Julian W., Systematic Price Action Trader):**  
-  > *"TradingView's replay has a subtle flaw: when you switch timeframes, it flashes the next candle, corrupting your subconscious bias. FX Replay is the only web tool that guarantees 100% pure backtesting integrity."*
+  > *"TradingView's replay has a subtle flaw: when you switch timeframes, it flashes the next candle, corrupting your subconscious bias. Acme Backtest is the only web tool that guarantees 100% pure backtesting integrity."*
 * **Reviewer 2 (Patrick S., Algorithmic & Discretionary Trader):**  
-  > *"On TradingView, a 1-hour candle with wicks in both directions leaves you guessing whether your Stop Loss or Take Profit hit first. FX Replay’s seconds data gives you the exact tick order."*
+  > *"On TradingView, a 1-hour candle with wicks in both directions leaves you guessing whether your Stop Loss or Take Profit hit first. Acme Backtest’s seconds data gives you the exact tick order."*
 * **Reviewer 3 (Kenji M., SMC Trader):**  
   > *"TradingView charts, but with the engine of a professional institutional simulator. The multi-timeframe synchronization alone makes it indispensable."*
 

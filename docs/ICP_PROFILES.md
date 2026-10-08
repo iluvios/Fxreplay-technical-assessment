@@ -1,4 +1,4 @@
-# FX Replay: Ideal Customer Profiles (ICPs) & Behavioral Intelligence Master Document
+# Acme Backtest: Ideal Customer Profiles (ICPs) & Behavioral Intelligence Master Document
 **Document Purpose:** Ground truth repository of target customer personas, behavioral profiles, psychological drivers, core assumptions, and seed experiment hypotheses.  
 **Destination:** Feeding the dynamic `/freetrial?lp=X` experiment engine and the `/marketingengine` internal dashboard.
 
@@ -6,7 +6,7 @@
 
 ## Executive Overview: The Growth Thesis
 
-Growth at FX Replay does not come from generic "feature-dump" landing pages. The retail trading audience is highly segmented by **intent, available capital, screen availability, and emotional pain**. 
+Growth at Acme Backtest does not come from generic "feature-dump" landing pages. The retail trading audience is highly segmented by **intent, available capital, screen availability, and emotional pain**. 
 
 A blanket value proposition like *"Master the markets with backtesting"* fails to trigger the intense emotional urgency required to drive instant, frictionless account signups. To maximize conversion velocity, our marketing engine dynamically aligns messaging with three distinct psychological profiles:
 
@@ -21,7 +21,7 @@ A blanket value proposition like *"Master the markets with backtesting"* fails t
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Archetype: "The Evaluation Grinder"                                     │
-│ Target URL: fxreplay.com/freetrial?lp=1                                 │
+│ Target URL: acme-backtest.example/freetrial?lp=1                                 │
 │ Traffic Share: ~60% of Acquisition Funnel                              │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -53,12 +53,12 @@ However, they are caught in a vicious cycle: retail prop challenge failure rates
 
 ### 5. Core Assumptions
 * **High Loss Aversion:** An angle emphasizing **saving $300-$500 in wasted evaluation fees** will convert at least 2x higher than an angle emphasizing "improving win rate."
-* **Willingness to Pay:** A $35/month FX Replay subscription is instantly justified if positioned as an "Insurance Policy" against failing a single $300 evaluation.
+* **Willingness to Pay:** A $35/month Acme Backtest subscription is instantly justified if positioned as an "Insurance Policy" against failing a single $300 evaluation.
 * **Friction Sensitivity:** They are impatient. Any mandatory credit card collection upfront will trigger a 60%+ bounce rate. A frictionless "Try Free" session must give them immediate access to prop drawdown tracking.
 
 ### 6. Acquisition Channels & Target Keywords
 * **Paid Search Keywords:** `pass ftmo challenge fast`, `best prop firm simulator`, `how to avoid max daily drawdown`, `ftmo phase 1 strategy`, `prop firm backtesting tool`.
-* **Meta & TikTok Ad Angles:** Split-screen video showing a trader failing an FTMO challenge and screaming vs. a trader stress-testing their risk on FX Replay with the prop rules overlay before passing on day 1.
+* **Meta & TikTok Ad Angles:** Split-screen video showing a trader failing an FTMO challenge and screaming vs. a trader stress-testing their risk on Acme Backtest with the prop rules overlay before passing on day 1.
 * **Organic SEO & YouTube:** "How to practice FTMO rules for free before buying an evaluation."
 
 ### 7. Seed Hypotheses for the Experiment Engine
@@ -72,7 +72,7 @@ However, they are caught in a vicious cycle: retail prop challenge failure rates
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Archetype: "The Time-Starved Professional"                              │
-│ Target URL: fxreplay.com/freetrial?lp=2                                 │
+│ Target URL: acme-backtest.example/freetrial?lp=2                                 │
 │ Traffic Share: ~30% of Acquisition Funnel                              │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -104,7 +104,7 @@ Their existential barrier is **time**. Between corporate meetings, client demand
 ### 5. Core Assumptions
 * **Time-to-Value Priority:** They do not care about a $35/month fee; they care about **wasted time**. Highlighting speed, efficiency, and automated trade journaling resonates far more than discounts.
 * **Desktop & Dual-Monitor Users:** They trade and backtest on high-end laptops or desktop setups during the weekend.
-* **Value Metric:** Every hour spent on FX Replay must feel like 20 hours of live market experience.
+* **Value Metric:** Every hour spent on Acme Backtest must feel like 20 hours of live market experience.
 
 ### 6. Acquisition Channels & Target Keywords
 * **Paid Search Keywords:** `how to practice trading on weekends`, `backtesting software weekend forex`, `trade replay when markets are closed`, `forex market simulator for busy people`.
@@ -122,7 +122,7 @@ Their existential barrier is **time**. Between corporate meetings, client demand
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
 │ Archetype: "The Strategy Architect"                                     │
-│ Target URL: fxreplay.com/freetrial?lp=3                                 │
+│ Target URL: acme-backtest.example/freetrial?lp=3                                 │
 │ Traffic Share: ~10% of Acquisition Funnel                              │
 └─────────────────────────────────────────────────────────────────────────┘
 ```
@@ -157,11 +157,11 @@ They already pay for a TradingView Pro or Premium account. However, they have hi
 ### 5. Core Assumptions
 * **Direct Comparison Sells:** Calling out TradingView's specific engineering flaws by name is the single fastest way to earn their respect and trust.
 * **Feature Skepticism:** They despise marketing hype ("make money fast"). They only respond to technical specs: tick-level data, multi-timeframe synchronization, automated R:R calculation, zero lookahead guarantee.
-* **High Retention:** Once a Systematizer imports their strategy into FX Replay and builds a verified 200-trade journal, their switching costs are massive. They become high-LTV annual subscribers.
+* **High Retention:** Once a Systematizer imports their strategy into Acme Backtest and builds a verified 200-trade journal, their switching costs are massive. They become high-LTV annual subscribers.
 
 ### 6. Acquisition Channels & Target Keywords
 * **Paid Search Keywords:** `tradingview bar replay alternatives`, `tradingview replay lookahead bias fix`, `multi timeframe backtesting software`, `tick by tick market replay browser`.
-* **Meta & YouTube Angles:** Video side-by-side demonstrating the exact bug in TradingView (candle flash leak) vs. FX Replay's synchronized multi-timeframe stepping.
+* **Meta & YouTube Angles:** Video side-by-side demonstrating the exact bug in TradingView (candle flash leak) vs. Acme Backtest's synchronized multi-timeframe stepping.
 * **Reddit & Twitter Search Intent:** Answering threads complaining about TradingView's replay limitations.
 
 ### 7. Seed Hypotheses for the Experiment Engine
@@ -175,10 +175,10 @@ They already pay for a TradingView Pro or Premium account. However, they have hi
 | Attribute | ICP 1: Prop Firm Hunter | ICP 2: Weekend Warrior | ICP 3: TradingView Skeptic |
 | :--- | :--- | :--- | :--- |
 | **Traffic Allocation** | **60%** | **30%** | **10%** |
-| **Target URL** | `fxreplay.com/freetrial?lp=1` | `fxreplay.com/freetrial?lp=2` | `fxreplay.com/freetrial?lp=3` |
+| **Target URL** | `acme-backtest.example/freetrial?lp=1` | `acme-backtest.example/freetrial?lp=2` | `acme-backtest.example/freetrial?lp=3` |
 | **Primary Pain** | Burning \$300–\$500 on failed evaluations | Lack of time to trade live weekday sessions | TradingView replay bugs & lookahead bias |
 | **Emotional Trigger** | **Loss Aversion & Financial Regret** | **Time Compression & Accelerated Competence** | **Intellectual Rigor & Data Fidelity** |
-| **Hero Headline** | *Stop burning \$300 challenge fees. Prove your edge first.* | *Master 1 year of price action in a single weekend.* | *TradingView was built for charts. FX Replay was built for edge.* |
+| **Hero Headline** | *Stop burning \$300 challenge fees. Prove your edge first.* | *Master 1 year of price action in a single weekend.* | *TradingView was built for charts. Acme Backtest was built for edge.* |
 | **Hero Subhead** | *Simulate FTMO and Apex drawdown rules bar-by-bar before buying a challenge.* | *Trade 100 London and NY sessions this Sunday with zero lookahead bias.* | *True multi-timeframe stepping, zero candle leaks, and sub-second tick accuracy.* |
 | **Primary CTA** | **Test Your Prop Strategy Free** | **Start Weekend Replay Free** | **Experience Pure Replay Free** |
 | **Key Differentiator** | Live Prop Firm Rule Tracking Engine | 24/7 Market Access & Automated Journaling | Zero Lookahead Bias & Sub-Second Tick Precision |
@@ -230,7 +230,7 @@ This document provides the exact seed parameters to be ingested into the `icps` 
     "target_channel": "TradingView Search & Technical Communities",
     "hero_copy": {
       "eyebrow": "PURPOSE-BUILT TRADING SIMULATOR",
-      "headline": "TradingView replay was built for charts. FX Replay was built for edge.",
+      "headline": "TradingView replay was built for charts. Acme Backtest was built for edge.",
       "subheadline": "True multi-timeframe stepping. No candle flash leaks. Sub-second tick data. Everything you wish TradingView's replay button could do.",
       "cta": "Experience Pure Replay Free"
     }

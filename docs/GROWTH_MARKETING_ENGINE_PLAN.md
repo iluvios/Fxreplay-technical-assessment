@@ -1,4 +1,4 @@
-# FX Replay Growth Marketing Engine: Architecture & Planning Document
+# Acme Backtest Growth Marketing Engine: Architecture & Planning Document
 **Focus:** Server-Side Pre-Rendered Experiments, ICP Personalization & Internal Growth Dashboard  
 **Status:** Approved Architectural Plan  
 **Target Environment:** Vercel (Astro 5 SSR via @astrojs/vercel, React 19 Islands)
@@ -8,7 +8,7 @@
 ## 1. Executive Summary & Core Hypothesis
 
 ### The Growth Challenge
-FX Replay's growth objective is to maximize visitor-to-account conversion for the **"Try FX Replay Free"** offer. Traffic originates from diverse acquisition channels (Google Search Ads, Meta Video Ads, YouTube Influencers, Organic SEO) with wildly differing search intents and psychological motivations.
+Acme Backtest's growth objective is to maximize visitor-to-account conversion for the **"Try Acme Backtest Free"** offer. Traffic originates from diverse acquisition channels (Google Search Ads, Meta Video Ads, YouTube Influencers, Organic SEO) with wildly differing search intents and psychological motivations.
 
 ### The Strategic Decision: Single Design Template, Variable Copy & Messaging
 To run statistically valid and clean experiments, **the landing page design, layout, and visual structure must remain constant**. 
@@ -26,7 +26,7 @@ To run statistically valid and clean experiments, **the landing page design, lay
                                      │
                                      ▼
                     ┌─────────────────────────────────┐
-                    │     https://fxreplay.com        │
+                    │     https://acme-backtest.example/        │
                     └────────────────┬────────────────┘
                                      │
          ┌───────────────────────────┴───────────────────────────┐
@@ -44,8 +44,8 @@ To run statistically valid and clean experiments, **the landing page design, lay
 ```
 
 ### Route 1: `/freetrial` (Experiment Delivery Surface)
-- **Primary URL:** `fxreplay.com/freetrial` (Serves the default Control baseline).
-- **Targeted URL:** `fxreplay.com/freetrial?lp=1` (or `?lp=prop-firm`, `?lp=weekend-trader`).
+- **Primary URL:** `acme-backtest.example/freetrial` (Serves the default Control baseline).
+- **Targeted URL:** `acme-backtest.example/freetrial?lp=1` (or `?lp=prop-firm`, `?lp=weekend-trader`).
 - **Server-Side Pre-Rendering (Zero CLS):**
   - Astro Server Engine extracts searchParams (Astro.url.searchParams) on the server request.
   - The variant copy dictionary is resolved from the database/repository **before HTML serialization**.
@@ -200,13 +200,13 @@ The internal dashboard is built with 3 primary management views:
 A visual directory of all target customer profiles:
 - **Card 1: Prop Firm Challenge Hunter (60% Traffic Share)**
   - *Primary Ad Angles:* Loss aversion, avoiding reset fees, passing Phase 1/2.
-  - *Active Mapped Landing Page:* `fxreplay.com/freetrial?lp=1`
+  - *Active Mapped Landing Page:* `acme-backtest.example/freetrial?lp=1`
 - **Card 2: 9-to-5 Weekend Warrior (30% Traffic Share)**
   - *Primary Ad Angles:* Time compression, trading 1 year of data on a Sunday, busy schedule.
-  - *Active Mapped Landing Page:* `fxreplay.com/freetrial?lp=2`
+  - *Active Mapped Landing Page:* `acme-backtest.example/freetrial?lp=2`
 - **Card 3: TradingView Skeptic / Precision Scalper (10% Traffic Share)**
   - *Primary Ad Angles:* No lookahead bias, sub-second tick data, TradingView replay flaws.
-  - *Active Mapped Landing Page:* `fxreplay.com/freetrial?lp=3`
+  - *Active Mapped Landing Page:* `acme-backtest.example/freetrial?lp=3`
 
 ---
 

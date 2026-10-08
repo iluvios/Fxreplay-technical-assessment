@@ -4,8 +4,8 @@
 **YOUR SOLE ROLE IS TO IMPLEMENT THE UI/UX DESIGN AND PAGE STRUCTURE.**  
 Do not invent copy, do not design new layouts, do not write documentation, and do not over-engineer analytics. All specifications, image URLs, and copy dictionaries are already finalized in `docs/`:
 
-* **Visual Design Blueprint:** Read `docs/FRONTEND_BUILD_SPEC.md` (Matches `fxreplay.com` 1:1).
-* **Live Image & Logo CDN URLs:** Read `docs/IMAGE_ASSETS_CATALOG.md` (Direct Webflow CDN links for all logos, mockups, and broker badges).
+* **Visual Design Blueprint:** Read `docs/FRONTEND_BUILD_SPEC.md`.
+* **Brand assets:** `src/components/Logo.astro` and `src/components/ProductMockup.astro` (inline SVG — no external images). Acme Backtest is a fictional demo brand.
 * **Copy Dictionaries:** Read `docs/EXPERIMENT_VARIANTS_COPY.md` (Use the exact pre-written copy variables; do NOT brainstorm new copy).
 * **Database Schema:** Read `docs/DATABASE_SCHEMA.md` (5 PostgreSQL tables for Neon).
 
@@ -25,31 +25,27 @@ Do not invent copy, do not design new layouts, do not write documentation, and d
 
 ---
 
-## 3. Official FX Replay Brand Kit Tokens
-**Source of truth:** `docs/FX_Replay_Brand_Kit/Brand Kit/brand-kit.html` (44 primitives + 60 semantic tokens).
+## 3. Acme Backtest Design Tokens
 **Implemented in:** `tailwind.config.mjs` — the single source of truth for the UI palette.
 Use the Tailwind token classes below; **never hard-code hex in components.**
 
-> Note: the kit's `tokens/tokens.css` and `source/` folders were missing from the delivered
-> archive, so the semantic layer is reproduced in `tailwind.config.mjs`.
-
-| Purpose | Semantic token | Primitive | Hex | Tailwind class |
-|---|---|---|---|---|
-| Brand / CTA | `btn-bg-primary-active` | `blue-600` | `#0260FD` | `bg-brand` |
-| Brand hover | `btn-bg-primary-hover` | `blue-800` | `#01307F` | `hover:bg-brand-hover` |
-| Brand pressed | `btn-bg-primary-pressed` | `blue-900` | `#012054` | `bg-brand-pressed` |
-| Brand accent (text) | `btn-text-minimal-hover` | `blue-500` | `#2C7BFD` | `text-brand-light` |
-| Page ground | `bg-primary` | `dark-900` | `#030303` | `bg-surface` |
-| Card surface | `bg-secondary` | `dark-800` | `#0A0A0A` | `bg-surface-raised` |
-| Inner surface | `bg-tertiary` | `dark-700` | `#1A1A1A` | `bg-surface-inset` |
-| Border | `border-primary` | `dark-700` | `#1A1A1A` | `border-line` |
-| Border (strong) | `border-secondary` | `dark-600` | `#2A2A2A` | `border-line-strong` |
-| Text primary | `text-primary` | `neutral-50` | `#F6F6F6` | `text-ink` |
-| Text secondary | `text-secondary` | `neutral-200` | `#D1D1D1` | `text-ink-muted` |
-| Text disabled | `text-disabled` | `neutral-400` | `#888888` | `text-ink-subtle` |
-| Profit / success | `success` | — | `#53B483` | `text-success` / `bg-success` |
-| Loss / error | `error` | — | `#CD3636` | `text-error` / `bg-error` |
-| Warning | `warning` | — | `#CD8A36` | `text-warning` / `bg-warning` |
+| Purpose | Hex | Tailwind class |
+|---|---|---|
+| Brand / CTA | `#7C3AED` | `bg-brand` |
+| Brand hover | `#6D28D9` | `hover:bg-brand-hover` |
+| Brand pressed | `#5B21B6` | `bg-brand-pressed` |
+| Brand accent (text) | `#A78BFA` | `text-brand-light` |
+| Page ground | `#030303` | `bg-surface` |
+| Card surface | `#0A0A0A` | `bg-surface-raised` |
+| Inner surface | `#1A1A1A` | `bg-surface-inset` |
+| Border | `#1A1A1A` | `border-line` |
+| Border (strong) | `#2A2A2A` | `border-line-strong` |
+| Text primary | `#F6F6F6` | `text-ink` |
+| Text secondary | `#D1D1D1` | `text-ink-muted` |
+| Text disabled | `#888888` | `text-ink-subtle` |
+| Profit / success | `#53B483` | `text-success` / `bg-success` |
+| Loss / error | `#CD3636` | `text-error` / `bg-error` |
+| Warning | `#CD8A36` | `text-warning` / `bg-warning` |
 
 - **Typography:**
   - **Headings (`h1`, `h2`, `h3`):** `Lato` (400, 700, 900) — `font-display`

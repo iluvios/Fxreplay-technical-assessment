@@ -1,5 +1,5 @@
 # Deliverable 3: Experiment Proposal
-**FX Replay Growth Marketing Engine**  
+**Acme Backtest Growth Marketing Engine**  
 **Experiment Name:** `EXP-2026-HERO-ICP-LOSS-AVERSION`  
 **Test Type:** Multi-Arm Bandit / 4-Variant A/B/C/D Experiment (Server-Rendered via `?lp=X`)  
 **Primary Conversion Event:** `user_created` (`POST /api/users` 201 Created)
@@ -9,7 +9,7 @@
 ## 1. Executive Summary & Core Hypothesis
 
 ### The Problem
-FX Replay's default homepage headline (*"Your strategy shouldn’t be tested with real money"*) is intellectually sound, but it speaks to a generic, unsegmented trader. However, over **60% of inbound acquisition traffic** consists of **Prop Firm Challenge Hunters** attempting to pass funded evaluations at FTMO, Apex, Topstep, or FundedNext.
+Acme Backtest's default homepage headline (*"Your strategy shouldn’t be tested with real money"*) is intellectually sound, but it speaks to a generic, unsegmented trader. However, over **60% of inbound acquisition traffic** consists of **Prop Firm Challenge Hunters** attempting to pass funded evaluations at FTMO, Apex, Topstep, or FundedNext.
 
 These traders are not motivated by abstract "practice"—they are in **acute financial pain from repeatedly burning \$300 to \$500 per failed evaluation** on trailing drawdown rules.
 
@@ -26,10 +26,10 @@ To isolate the test variables cleanly, the **page layout, grid structure, naviga
 
 | Test Arm | ICP Audience | 1. Main Header | 2. Small Description | 3. Primary CTA | 4. Hero Visual (`hero_image`) | Client Review Hook |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **Control (Baseline)** | General Audience | *"Your strategy shouldn’t be tested with real money"* | "FX Replay is arguably the most effective way to backtest your strategies. Execute more confidently and accomplish your trading goals." | `Get started for free`<br>*(No credit card required)* | Standard EUR/USD candlestick replay canvas | Generic platform praise (Dylan Mitch, Mack Grey) |
+| **Control (Baseline)** | General Audience | *"Your strategy shouldn’t be tested with real money"* | "Acme Backtest is arguably the most effective way to backtest your strategies. Execute more confidently and accomplish your trading goals." | `Get started for free`<br>*(No credit card required)* | Standard EUR/USD candlestick replay canvas | Generic platform praise (Dylan Mitch, Mack Grey) |
 | **Variant A (`lp=1`)** *(Primary Test)* | **Prop Firm Challenge Hunter** | *"Stop burning $300 challenge fees. Prove your edge first."* | "Simulate FTMO and Apex drawdown rules bar-by-bar. Stress-test your risk before you buy a real evaluation." | `Test Your Prop Strategy Free`<br>*(Practice prop rules 100% free)* | Real-time **Prop Drawdown Meter Mockup** (5% daily loss limit & Phase 1 target progress) | *"Passed my $200k FTMO challenge on the first try after 2 weeks in Replay."* — Marcus K., Funded Trader |
 | **Variant B (`lp=2`)** | **9-to-5 Weekend Warrior** | *"Master 1 year of price action in a single weekend"* | "Can't trade live sessions during your 9-to-5? Replay 52 Monday-morning market opens this Sunday with zero lookahead bias." | `Start Weekend Replay Free`<br>*(Trade historical markets 24/7)* | **Replay Speed Controller Mockup** (10x/30x fast-forward slider & London open jump button) | *"Between sprint meetings, I can't trade live NY open. I test 5 months every Sunday."* — David L., Engineer |
-| **Variant C (`lp=3`)** | **TradingView Skeptic** | *"TradingView was built for charts. FX Replay was built for edge."* | "True multi-timeframe stepping. No candle flash leaks. Sub-second tick data so you know whether Stop Loss or Take Profit hit first." | `Experience Pure Replay Free`<br>*(Zero lookahead bias guaranteed)* | **Multi-Timeframe Synchronized Canvas** (4H and 1m charts stepping simultaneously) | *"TradingView flashes the next candle when you switch timeframes. FX Replay has zero leaks."* — Julian W., SMC Trader |
+| **Variant C (`lp=3`)** | **TradingView Skeptic** | *"TradingView was built for charts. Acme Backtest was built for edge."* | "True multi-timeframe stepping. No candle flash leaks. Sub-second tick data so you know whether Stop Loss or Take Profit hit first." | `Experience Pure Replay Free`<br>*(Zero lookahead bias guaranteed)* | **Multi-Timeframe Synchronized Canvas** (4H and 1m charts stepping simultaneously) | *"TradingView flashes the next candle when you switch timeframes. Acme Backtest has zero leaks."* — Julian W., SMC Trader |
 
 ---
 
